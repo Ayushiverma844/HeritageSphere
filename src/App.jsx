@@ -5,6 +5,7 @@ import Auth from './pages/Auth';
 import { Routes, Route } from 'react-router-dom';
 import Explore from "./pages/Explore";
 import Profile from './pages/Profile';
+import PlaceDetails from "./pages/PlaceDetails";
 
 const App = () => {
   return (
@@ -51,6 +52,7 @@ const App = () => {
         <Route path="/auth" element={<Auth />} />
          <Route path="/explore" element={<Explore />} />
          <Route path="/profile" element={<Profile />} />
+         <Route path="/PlaceDetails" element={<PlaceDetails />} />
       </Routes>
 </div>
   )
