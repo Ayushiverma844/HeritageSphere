@@ -9,10 +9,9 @@ const Home = () => {
   return (
    <>
     <Navbar/>
- <Landing />
+    <Landing />
     <HeritageHighlights/>
     <EpicTales/>
-  
    </>
   )
 }

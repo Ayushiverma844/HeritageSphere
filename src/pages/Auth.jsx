@@ -84,35 +84,52 @@ const Auth = () => {
           </div>
 
           {/* Toggle */}
-          <div className="mt-10 bg-white/5 border border-white/10 rounded-2xl p-1 flex relative">
+          <div className="mt-10 relative bg-white/5 border border-white/10 rounded-2xl p-1 flex overflow-hidden">
 
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`w-1/2 py-3 rounded-xl transition-all duration-500 ${
-                isLogin
-                  ? "bg-heritage-gold text-black"
-                  : "text-gray-400"
-              }`}
-            >
-              Login
-            </button>
+  {/* Sliding Gold Background */}
+  <div
+    className={`
+      absolute top-1 bottom-1 w-[calc(50%-4px)]
+      rounded-xl bg-heritage-gold
+      transition-all duration-500 ease-in-out
+      ${isLogin ? "left-1" : "left-[calc(50%+2px)]"}
+    `}
+  />
 
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`w-1/2 py-3 rounded-xl transition-all duration-500 ${
-                !isLogin
-                  ? "bg-heritage-gold text-black"
-                  : "text-gray-400"
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
+  {/* Login Button */}
+  <button
+    onClick={() => setIsLogin(true)}
+    className={`
+      relative z-10 w-1/2 py-3 text-lg font-medium
+      transition-all duration-300
+      ${isLogin ? "text-black" : "text-gray-400"}
+    `}
+  >
+    Login
+  </button>
 
+  {/* Signup Button */}
+  <button
+    onClick={() => setIsLogin(false)}
+    className={`
+      relative z-10 w-1/2 py-3 text-lg font-medium
+      transition-all duration-300
+      ${!isLogin ? "text-black" : "text-gray-400"}
+    `}
+  >
+    Sign Up
+  </button>
+
+</div>
           {/* Animated Form */}
           <div
             key={isLogin ? "login" : "signup"}
-            className="mt-8 animate-[fadeIn_.4s_ease]"
+            className="
+mt-8
+animate-[fadeIn_.5s_ease]
+transition-all
+duration-500
+"
           >
 
             {!isLogin && (
@@ -121,7 +138,17 @@ const Auth = () => {
                   Full Name
                 </label>
 
-                <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
+                <div className="
+flex items-center gap-3
+bg-white/5
+border border-white/10
+rounded-2xl
+px-4 py-4
+transition-all duration-300
+hover:border-heritage-gold/40
+focus-within:border-heritage-gold
+focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
+">
                   <User size={20} />
                   <input
                     type="text"
