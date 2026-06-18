@@ -8,7 +8,7 @@ import {
   Trees,
   Ellipsis,
 } from "lucide-react";
-import img1 from "../../assests/bg.jpg";
+import img from "../../assests/bg.jpg";
 
 const categories = [
   { name: "Temples", icon: Landmark },
@@ -26,7 +26,7 @@ const Landing = () => {
 
       {/* Background Image */}
       <img
-  src={img1}
+  src={img}
   alt="Heritage"
   className="absolute inset-0 w-full h-full object-cover  "
 />

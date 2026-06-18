@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import Explore from "../pages/Explore"
 import {
   Search,
   User,
@@ -44,7 +44,7 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to="/explore"
+            to="Explore"
             className="flex items-center gap-2 text-gray-300 hover:text-heritage-gold transition-all duration-300 hover:-translate-y-1"
           >
             <Compass size={18} />

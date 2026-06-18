@@ -19,7 +19,23 @@ body,
     #08111d 50%,
     #050b14 100%
   );
+  background-image:
+    
+    linear-gradient(
+    to bottom,
+    rgba(8, 17, 29, 0.82) 0%,
+    rgba(8, 17, 29, 0.72) 35%,
+    rgba(8, 17, 29, 0.78) 70%,
+    rgba(5, 11, 20, 0.90) 100%
+  ),
+    url("./assests/bgAll.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
+
 
 @keyframes fadeIn {
   from {
