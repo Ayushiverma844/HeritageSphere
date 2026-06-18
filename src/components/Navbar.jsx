@@ -81,14 +81,15 @@ hover:text-heritage-gold hover:scale-110 transition-all duration-300"
           </button>
 
           {/* Desktop Profile */}
-          <button
+          <Link to="/profile"><button
            className="hidden md:flex h-10 w-10 rounded-full bg-white/5 border border-white/10
 items-center justify-center text-white
 hover:text-heritage-gold hover:scale-110 transition-all duration-300"
           >
             <User size={20} />
           </button>
-
+</Link>
+          
           {/* Desktop Login */}
           <Link to="/auth">
           <button
