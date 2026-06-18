@@ -8,7 +8,7 @@ import {
   Trees,
   Ellipsis,
 } from "lucide-react";
-import img from "../../assests/bg.jpg";
+import img from "../../assests/bg2.jpg";
 
 const categories = [
   { name: "Temples", icon: Landmark },
@@ -28,7 +28,7 @@ const Landing = () => {
       <img
   src={img}
   alt="Heritage"
-  className="absolute inset-0 w-full h-full object-cover  "
+  className="absolute inset-0 w-full h-full object-cover scale-x-[-1] "
 />
 
       {/* Overlay */}

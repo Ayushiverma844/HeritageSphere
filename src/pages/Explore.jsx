@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Navbar from '../components/Navbar'
 import {
   Search,
   Star,
@@ -104,7 +105,9 @@ const Explore = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
-    <div className="min-h-screen text-white pt-28">
+    <>
+     <Navbar/>
+     <div className="min-h-screen text-white pt-28">
       
 
       {/* Heading */}
@@ -341,59 +344,95 @@ const Explore = () => {
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
 
           {places.map((place) => (
-            <div
-              key={place.id}
-              className="
-              relative
-              mb-5
-              overflow-hidden
-              rounded-3xl
-              break-inside-avoid
-              cursor-pointer
-              group
-              "
-            >
-              <img
-                src={place.image}
-                alt={place.name}
-                className={`
-                  w-full
-                  object-cover
-                  ${place.height}
-                  transition-transform
-                  duration-700
-                  group-hover:scale-110
-                `}
-              />
+  <div
+    key={place.id}
+    className="
+    relative
+    mb-5
+    overflow-hidden
+    rounded-3xl
+    break-inside-avoid
+    cursor-pointer
+    group
+    "
+  >
+    {/* Image */}
+    <img
+      src={place.image}
+      alt={place.name}
+      className={`
+        w-full
+        object-cover
+        ${place.height}
+        transition-transform
+        duration-700
+        group-hover:scale-110
+      `}
+    />
 
-              <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
+    {/* Gradient */}
+    <div className="absolute inset-0 bg-linear-to-t from-black via-black/30 to-transparent" />
 
-              <div className="absolute bottom-5 left-5">
+    {/* Heart Icon */}
+    <div className="absolute top-4 right-4">
+      <button className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:text-red-400 transition">
+        <Heart size={18} />
+      </button>
+    </div>
 
-                <h3 className="text-2xl font-semibold">
-                  {place.name}
-                </h3>
+    {/* Bottom Content */}
+    <div className="absolute bottom-5 left-5 right-5">
 
-                <div className="flex items-center gap-2 mt-2">
+      {/* Category + Price */}
+      <div className="flex items-center justify-between mb-2">
 
-                  <Star
-                    size={16}
-                    fill="#d4af37"
-                    color="#d4af37"
-                  />
+        <span className="text-xs px-3 py-1 rounded-full bg-heritage-gold/20 text-heritage-gold border border-heritage-gold/30">
+          {place.category}
+        </span>
 
-                  <span>{place.rating}</span>
+        <span className="text-sm text-heritage-gold font-semibold">
+          ₹{place.price}
+        </span>
 
-                </div>
+      </div>
 
-              </div>
-            </div>
-          ))}
+      {/* Name */}
+      <h3 className="text-2xl font-semibold">
+        {place.name}
+      </h3>
+
+      {/* Location */}
+      <div className="flex items-center gap-2 mt-1 text-gray-300 text-sm">
+        <MapPin size={14} />
+        <span>{place.location}</span>
+      </div>
+
+      {/* Rating */}
+      <div className="flex items-center gap-2 mt-2">
+
+        <Star
+          size={16}
+          fill="#d4af37"
+          color="#d4af37"
+        />
+
+        <span>{place.rating}</span>
+        <span className="text-gray-400 text-sm">
+          ({place.reviews})
+        </span>
+
+      </div>
+
+    </div>
+  </div>
+))}
         </div>
 
       </div>
 
     </div>
+    </>
+    
   );
 };
 
