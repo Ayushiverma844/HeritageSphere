@@ -9,6 +9,7 @@ import PlaceDetails from "./pages/PlaceDetails";
 import Favorites from "./pages/MyFavorites";
 import KnowledgeHub from './pages/KnowledgeHub';
 import Story from './pages/Story';
+import Admin from './pages/AdminDashboard'
 const App = () => {
   return (
    
@@ -58,6 +59,7 @@ const App = () => {
          <Route path="/Favorites" element={<Favorites />} />
           <Route path="/KnowledgeHub" element={<KnowledgeHub />} />
           <Route path="/Story" element={<Story/>} />
+          <Route path="/Admin" element={<Admin />} />
       </Routes>
 </div>
   )
