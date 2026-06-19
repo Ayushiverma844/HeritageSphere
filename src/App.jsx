@@ -7,6 +7,8 @@ import Explore from "./pages/Explore";
 import Profile from './pages/Profile';
 import PlaceDetails from "./pages/PlaceDetails";
 import Favorites from "./pages/MyFavorites";
+import KnowledgeHub from './pages/KnowledgeHub';
+import Story from './pages/Story';
 const App = () => {
   return (
    
@@ -54,7 +56,8 @@ const App = () => {
          <Route path="/profile" element={<Profile />} />
          <Route path="/PlaceDetails" element={<PlaceDetails />} />
          <Route path="/Favorites" element={<Favorites />} />
-
+          <Route path="/KnowledgeHub" element={<KnowledgeHub />} />
+          <Route path="/Story" element={<Story/>} />
       </Routes>
 </div>
   )
