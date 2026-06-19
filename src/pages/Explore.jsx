@@ -181,35 +181,45 @@ const Explore = () => {
     {(showAllCategories
       ? categories
       : categories.slice(0, 5)
-    ).map((item) => {
+    ).map((item , index) => {
       const Icon = item.icon;
 
       return (
-        <button
-          key={item.id}
-          className="
-          group
-          flex
-          flex-col
-          items-center
-          gap-2
-          "
-        >
+      <button
+  key={item.id}
+  className={`
+    group
+    flex
+    flex-col
+    items-center
+    gap-2
+    ${item.id > 5 ? "animate-categoryReveal" : ""}
+  `}
+  style={
+    item.id > 5
+      ? {
+          animationDelay: `${(item.id - 5) * 80}ms`,
+          animationFillMode: "both",
+        }
+      : {}
+  }
+>
           <div
-            className="
-            h-16 w-16
-            rounded-full
-            border border-heritage-gold/30
-            bg-white/5
-            backdrop-blur-md
-            flex items-center justify-center
-            text-heritage-gold
-            transition-all duration-300
-            group-hover:scale-110
-            group-hover:border-heritage-gold
-            group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]
-            "
-          >
+  className="
+    h-16 w-16
+    rounded-full
+    border border-heritage-gold/30
+    bg-white/5
+    backdrop-blur-md
+    flex items-center justify-center
+    text-heritage-gold
+    transition-all duration-500
+    group-hover:scale-110
+    group-hover:border-heritage-gold
+    group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]
+    group-hover:-translate-y-2
+  "
+>
             <Icon size={24} />
           </div>
 
@@ -253,7 +263,7 @@ const Explore = () => {
   >
     <span
       className={`
-        text-3xl leading-none font-light
+        text-2xl leading-none font-light
         transition-all duration-500 ease-out
         ${
           showAllCategories
