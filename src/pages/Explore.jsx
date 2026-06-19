@@ -221,39 +221,63 @@ const Explore = () => {
     })}
 
     {/* View All */}
-    <button
-      onClick={() =>
-        setShowAllCategories(!showAllCategories)
+  <button
+  onClick={() =>
+    setShowAllCategories(!showAllCategories)
+  }
+  className="
+    group
+    flex
+    flex-col
+    items-center
+    gap-2
+    cursor-pointer
+  "
+>
+  <div
+    className={`
+      h-16 w-16
+      rounded-full
+      border border-dashed border-heritage-gold/40
+      bg-white/5
+      flex items-center justify-center
+      text-heritage-gold
+      transition-all duration-500 ease-out
+      group-hover:scale-110
+      ${
+        showAllCategories
+          ? "rotate-180 scale-110 border-heritage-gold"
+          : "rotate-0 scale-100"
       }
-      className="
-      group
-      flex
-      flex-col
-      items-center
-      gap-2
-      "
+    `}
+  >
+    <span
+      className={`
+        text-3xl leading-none font-light
+        transition-all duration-500 ease-out
+        ${
+          showAllCategories
+            ? "rotate-180"
+            : "rotate-0"
+        }
+      `}
     >
-      <div
-        className="
-        h-16 w-16
-        rounded-full
-        border border-dashed border-heritage-gold/40
-        bg-white/5
-        flex items-center justify-center
-        text-heritage-gold
-        transition-all duration-300
-        group-hover:scale-110
-        "
-      >
-        +
-      </div>
+      {showAllCategories ? "−" : "+"}
+    </span>
+  </div>
 
-      <span className="text-sm text-gray-300">
-        {showAllCategories
-          ? "View Less"
-          : "View All"}
-      </span>
-    </button>
+  <span
+    className="
+      text-sm text-gray-300
+      transition-all duration-300
+      group-hover:text-white
+    "
+  >
+    {showAllCategories
+      ? "View Less"
+      : "View All"}
+  </span>
+</button>
 
   </div>
   <div

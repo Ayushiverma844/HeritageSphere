@@ -6,7 +6,7 @@ import { Routes, Route } from 'react-router-dom';
 import Explore from "./pages/Explore";
 import Profile from './pages/Profile';
 import PlaceDetails from "./pages/PlaceDetails";
-
+import Favorites from "./pages/MyFavorites";
 const App = () => {
   return (
    
@@ -53,6 +53,8 @@ const App = () => {
          <Route path="/explore" element={<Explore />} />
          <Route path="/profile" element={<Profile />} />
          <Route path="/PlaceDetails" element={<PlaceDetails />} />
+         <Route path="/Favorites" element={<Favorites />} />
+
       </Routes>
 </div>
   )
