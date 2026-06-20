@@ -8,6 +8,7 @@ import {
   Trees,
   Ellipsis,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import img from "../../assests/bg2.jpg";
 
 const categories = [
@@ -21,6 +22,7 @@ const categories = [
 ];
 
 const Landing = () => {
+  const navigate = useNavigate();
   return (
     <section className="relative min-h-[85vh] overflow-hidden rounded-b-3xl  ">
 
@@ -59,7 +61,7 @@ const Landing = () => {
 
           {/* Search */}
           <div className="mt-8 max-w-xl">
-            <div className="bg-white rounded-2xl px-5 py-4 flex items-center justify-between shadow-2xl">
+            <div className="bg-white rounded-2xl px-5 py-4 flex items-center justify-between shadow-2xl hover:scale-105 transition-all ease-in-out">
 
               <input
                 type="text"
@@ -84,10 +86,11 @@ const Landing = () => {
               const Icon = item.icon;
 
               return (
-                <button
-                  key={index}
-                  className="group flex flex-col items-center gap-2"
-                >
+                <button key={index}
+                     onClick={() =>navigate("/explore", {
+                                state: {
+                                category: item.name,},})}
+                   className="group flex flex-col items-center gap-2">
                   <div
                     className="
                     h-16 w-16
@@ -98,9 +101,10 @@ const Landing = () => {
                     flex items-center justify-center
                     text-heritage-gold
                     transition-all duration-300
-                    group-hover:scale-110
+                    group-hover:scale-120
                     group-hover:border-heritage-gold
                     group-hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]
+                    cursor-pointer
                   "
                   >
                     <Icon size={24} />

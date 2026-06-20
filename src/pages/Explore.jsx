@@ -12,6 +12,8 @@ import {
   SlidersHorizontal ,
     MapPin, Heart
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 
 
 const categories = [
@@ -103,6 +105,11 @@ const places = [
 const Explore = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+const selectedCategory = location.state?.category || "All";
+  
 
   return (
     <>
@@ -272,7 +279,7 @@ const Explore = () => {
         }
       `}
     >
-      {showAllCategories ? "−" : "+"}
+      {showAllCategories ? "-" : "+"}
     </span>
   </div>
 
@@ -378,18 +385,25 @@ const Explore = () => {
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
 
           {places.map((place) => (
-  <div
-    key={place.id}
-    className="
-    relative
-    mb-5
-    overflow-hidden
-    rounded-3xl
-    break-inside-avoid
-    cursor-pointer
-    group
-    "
-  >
+ <div
+  key={place.id}
+  onClick={() =>
+    navigate(`/placedetails`, {
+      state: {
+        place,
+      },
+    })
+  }
+  className="
+  relative
+  mb-5
+  overflow-hidden
+  rounded-3xl
+  break-inside-avoid
+  cursor-pointer
+  group
+  "
+>
     {/* Image */}
     <img
       src={place.image}

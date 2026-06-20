@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   MapPin,
   Star,
@@ -9,6 +10,7 @@ import {
   Ticket,
   Tag,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 
 import heroImg from "../assests/1.jpg";
@@ -21,7 +23,7 @@ const PlaceDetails = () => {
   return (
     <div className="min-h-screen text-white">
 
-     
+       
       <section className="relative h-125 overflow-hidden">
 
         <img
@@ -31,6 +33,34 @@ const PlaceDetails = () => {
         />
 
         <div className="absolute inset-0 bg-black/70" />
+            {/* Back Button */}
+  <Link
+    to="/explore"
+    className="
+    absolute
+    top-8
+    left-6
+    md:left-20
+    z-20
+    inline-flex
+    items-center
+    gap-2
+    px-4
+    py-2
+    rounded-xl
+    backdrop-blur-md
+    bg-black/10
+    text-white
+    hover:text-heritage-gold
+    hover:border-heritage-gold
+    transition-all
+    duration-300
+    "
+  >
+    <ArrowLeft size={18} />
+    Back to Explore
+  </Link>
+
 
         <div className="absolute bottom-10 left-0 right-0 px-6 md:px-20">
 
@@ -60,13 +90,13 @@ const PlaceDetails = () => {
       </section>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 ">
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-3 border-b border-heritage-gold/20 pb-4">
+        <div className="flex flex-wrap gap-3 border-b border-heritage-gold/20 pb-4 ">
 
           {tabs.map((tab) => (
-            <button
+            <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2 rounded-lg transition ${
