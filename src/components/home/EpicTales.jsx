@@ -36,7 +36,7 @@ const EpicTales = () => {
         </h2>
 
          <button
-            onClick={() => navigate("/knowledgehub")}
+            onClick={() => navigate("/knowledge-hub")}
             className="px-4 py-2 rounded-xl bg-heritage-light-gold/30 border border-white/10
   hover:border-heritage-gold transition hover:scale-105 cursor-pointer">
   View All
@@ -48,7 +48,7 @@ const EpicTales = () => {
         {stories.map((story, index) => (
           <div
             key={index}
-             onClick={() => navigate("/story")}
+             onClick={() => navigate(`/story/${story.id}`)}
             className="group relative rounded-2xl overflow-hidden border border-heritage-gold/20"
           >
             <img

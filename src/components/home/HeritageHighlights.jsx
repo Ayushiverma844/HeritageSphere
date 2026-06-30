@@ -40,7 +40,7 @@ const HeritageHighlights = () => {
         </h2>
 
        <button
-  onClick={() => navigate("/explore")}
+  onClick={() => navigate("/places")}
   className="
   px-4
   py-2
@@ -64,7 +64,7 @@ const HeritageHighlights = () => {
           <div
             key={index}
              onClick={() =>
-    navigate("/placedetails", {
+    navigate(`/place/${place.id}`, {
       state: {
         place: place,
       },

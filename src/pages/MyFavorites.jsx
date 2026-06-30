@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Heart,
-  Bookmark,
   MapPin,
   Star,
    Clock3,

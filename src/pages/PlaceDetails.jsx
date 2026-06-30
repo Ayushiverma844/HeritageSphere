@@ -15,10 +15,15 @@ import {
 
 import heroImg from "../assests/1.jpg";
 
+import { useParams } from "react-router-dom";
+
+
+
 const PlaceDetails = () => {
   const [activeTab, setActiveTab] = useState("About");
 
   const tabs = ["About", "Gallery", "Stories", "Reviews", "Nearby"];
+  const { id } = useParams();
 
   return (
     <div className="min-h-screen text-white">
@@ -35,7 +40,7 @@ const PlaceDetails = () => {
         <div className="absolute inset-0 bg-black/70" />
             {/* Back Button */}
   <Link
-    to="/explore"
+    to="/places"
     className="
     absolute
     top-8

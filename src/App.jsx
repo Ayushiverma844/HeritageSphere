@@ -1,15 +1,15 @@
-import React from 'react'
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 
-import Home  from './pages/Home'
-import Auth from './pages/Auth';
-import { Routes, Route } from 'react-router-dom';
+import Home from "./pages/Home";
+import Auth from "./pages/Auth";
 import Explore from "./pages/Explore";
-import Profile from './pages/Profile';
+import Profile from "./pages/Profile";
 import PlaceDetails from "./pages/PlaceDetails";
 import Favorites from "./pages/MyFavorites";
-import KnowledgeHub from './pages/KnowledgeHub';
-import Story from './pages/Story';
-import Admin from './pages/AdminDashboard'
+import KnowledgeHub from "./pages/KnowledgeHub";
+import Story from "./pages/Story";
+import Admin from "./pages/AdminDashboard";
 const App = () => {
   return (
    
@@ -50,17 +50,25 @@ const App = () => {
   </div>
 
  
- <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Auth />} />
-         <Route path="/explore" element={<Explore />} />
-         <Route path="/profile" element={<Profile />} />
-         <Route path="/PlaceDetails" element={<PlaceDetails />} />
-         <Route path="/Favorites" element={<Favorites />} />
-          <Route path="/KnowledgeHub" element={<KnowledgeHub />} />
-          <Route path="/Story" element={<Story/>} />
-          <Route path="/Admin" element={<Admin />} />
-      </Routes>
+<Routes>
+  <Route path="/" element={<Home />} />
+
+  <Route path="/auth" element={<Auth />} />
+
+  <Route path="/places" element={<Explore />} />
+
+  <Route path="/place/:id" element={<PlaceDetails />} />
+
+  <Route path="/knowledge-hub" element={<KnowledgeHub />} />
+
+  <Route path="/story/:id" element={<Story />} />
+
+  <Route path="/favorites" element={<Favorites />} />
+
+  <Route path="/profile" element={<Profile />} />
+
+  <Route path="/admin" element={<Admin />} />
+</Routes>
 </div>
   )
 }

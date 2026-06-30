@@ -13,7 +13,7 @@ const Story = () => {
         {/* Back Button */}
 
         <Link
-          to="/knowledgehub"
+          to="/knowledge-hub"
           className="
           inline-flex
           items-center

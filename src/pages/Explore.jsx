@@ -17,20 +17,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 
 const categories = [
-  { id: 1, name: "Temples", icon: Landmark },
-  { id: 2, name: "Forts", icon: Castle },
-  { id: 3, name: "Palaces", icon: Building2 },
-  { id: 4, name: "Museums", icon: ScrollText },
-  { id: 5, name: "Nature", icon: Trees },
-
-  // Hidden initially
-  { id: 6, name: "Monuments", icon: Landmark },
-  { id: 7, name: "Lakes", icon: Trees },
-  { id: 8, name: "Caves", icon: Castle },
-  { id: 9, name: "Gardens", icon: Trees },
-  { id: 10, name: "Churches", icon: Building2 },
-  { id: 11, name: "Mosques", icon: Building2 },
-  { id: 12, name: "UNESCO", icon: Landmark },
+  { id: 1, name: "Temple", icon: Landmark },
+  { id: 2, name: "Fort", icon: Castle },
+  { id: 3, name: "Palace", icon: Building2 },
+  { id: 4, name: "Museum", icon: ScrollText },
+  { id: 5, name: "Monument", icon: Landmark },
+  
+  // hidden initialy
+  { id: 6, name: "Natural Attraction", icon: Trees },
+  { id: 7, name: "Lake", icon: Trees },
+  { id: 8, name: "Cave", icon: Castle },
+  { id: 9, name: "Garden", icon: Trees },
+  { id: 10, name: "Church", icon: Building2 },
+  { id: 11, name: "Mosque", icon: Building2 },
+  { id: 12, name: "UNESCO Site", icon: Landmark },
 ];
 
 const places = [
@@ -388,7 +388,7 @@ const selectedCategory = location.state?.category || "All";
  <div
   key={place.id}
   onClick={() =>
-    navigate(`/placedetails`, {
+    navigate(`/place/${place.id}`, {
       state: {
         place,
       },

@@ -12,12 +12,12 @@ import { useNavigate } from "react-router-dom";
 import img from "../../assests/bg2.jpg";
 
 const categories = [
-  { name: "Temples", icon: Landmark },
-  { name: "Forts", icon: Castle },
-  { name: "Palaces", icon: Building2 },
-  { name: "Museums", icon: ScrollText },
-  { name: "Monuments", icon: Landmark },
-  { name: "Nature", icon: Trees },
+  { name: "Temple", icon: Landmark },
+  { name: "Fort", icon: Castle },
+  { name: "Palace", icon: Building2 },
+  { name: "Museum", icon: ScrollText },
+  { name: "Monument", icon: Landmark },
+  { name: "Natural Attraction", icon: Trees },
   { name: "More", icon: Ellipsis },
 ];
 
@@ -87,7 +87,7 @@ const Landing = () => {
 
               return (
                 <button key={index}
-                     onClick={() =>navigate("/explore", {
+                     onClick={() =>navigate("/places", {
                                 state: {
                                 category: item.name,},})}
                    className="group flex flex-col items-center gap-2">

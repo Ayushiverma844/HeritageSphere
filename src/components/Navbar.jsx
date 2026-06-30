@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import Explore from "../pages/Explore"
+
 
 import {
   Search,
@@ -93,7 +93,7 @@ useEffect(() => {
           </Link>
 
           <Link
-            to="Explore"
+            to="/places"
             className="flex items-center gap-2 text-gray-300 hover:text-heritage-gold transition-all duration-300 hover:-translate-y-1"
           >
             <Compass size={18} />
@@ -101,7 +101,7 @@ useEffect(() => {
           </Link>
 
           <Link
-            to="/knowledgehub"
+            to="/knowledge-hub"
             className="flex items-center gap-2 text-gray-300 hover:text-heritage-gold transition-all duration-300 hover:-translate-y-1"
           >
             <BookOpenText size={18} />
