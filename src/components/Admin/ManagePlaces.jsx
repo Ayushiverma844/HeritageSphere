@@ -2,12 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
-  Edit,
   MapPin,
   Image as ImageIcon,
   Save,
   Send,
-  Trash2,
 } from "lucide-react";
 
 const initialForm = {
@@ -26,19 +24,31 @@ const initialForm = {
   mapUrl: "",
 };
 
-const ManagePlaces = () => {
-  const [tab, setTab] = useState("form");
-  const [form, setForm] = useState(initialForm);
+const initialPublishedPlaces = [
+  {
+    id: 1,
+    name: "Taj Mahal",
+    type: "Monument",
+    country: "India",
+    gallery: [],
+  },
+  {
+    id: 2,
+    name: "Amer Fort",
+    type: "Fort",
+    country: "India",
+    gallery: [],
+  },
+  {
+    id: 3,
+    name: "Khajuraho Temple",
+    type: "Temple",
+    country: "India",
+    gallery: [],
+  },
+];
 
-  // ✅ Published Places (ONLY shows in Existing Places)
-  const [publishedPlaces, setPublishedPlaces] = useState([
-    { id: 1, name: "Taj Mahal", type: "Monument", country: "India" },
-    { id: 2, name: "Amer Fort", type: "Fort", country: "India" },
-    { id: 3, name: "Khajuraho Temple", type: "Temple", country: "India" },
-  ]);
-  
-
- const [drafts, setDrafts] = useState([
+const initialDrafts = [
   {
     id: 101,
     title: "Gateway of India",
@@ -56,90 +66,56 @@ const ManagePlaces = () => {
     mapUrl: "",
     gallery: [],
   },
-]);
+];
+
+const ManagePlaces = () => {
+  const [tab, setTab] = useState("Add Place");
+
+  const [form, setForm] = useState(initialForm);
+
+  const [publishedPlaces, setPublishedPlaces] = useState(
+    initialPublishedPlaces
+  );
+
+  const [drafts, setDrafts] = useState(initialDrafts);
 
   const [galleryImages, setGalleryImages] = useState([]);
 
+  const [coverImage, setCoverImage] = useState(null);
+
+  const [editingDraftId, setEditingDraftId] = useState(null);
+
+  // ==========================
+  // Handle Input Change
+  // ==========================
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // 🟡 Save Draft (NOT published)
-  const handleSaveDraft = () => {
-    setDrafts([
-      ...drafts,
-      {
-        id: Date.now(),
-        ...form,
-        gallery: galleryImages,
-      },
-    ]);
+  // ==========================
+  // Cover Upload
+  // ==========================
 
-    setForm(initialForm);
-    setGalleryImages([]);
-    console.log("Draft Saved");
-  };
-  const handleApproveDraft = (draft) => {
-  setPublishedPlaces([
-    ...publishedPlaces,
-    {
-      id: Date.now(),
-      name: draft.title,
-      type: draft.category,
-      country: draft.state,
-      gallery: draft.gallery,
-    },
-  ]);
+  const handleCoverUpload = (e) => {
+    const file = e.target.files[0];
 
-  setDrafts(drafts.filter((d) => d.id !== draft.id));
-}; 
-const handleDeleteDraft = (id) => {
-  setDrafts(drafts.filter((d) => d.id !== id));
-};
-const handleEditDraft = (draft) => {
-  setForm({
-    title: draft.title,
-    category: draft.category,
-    state: draft.state,
-    city: draft.city,
-    description: draft.description,
-    era: draft.era,
-    builtBy: draft.builtBy,
-    style: draft.style,
-    year: draft.year,
-    address: draft.address,
-    latitude: draft.latitude,
-    longitude: draft.longitude,
-    mapUrl: draft.mapUrl,
-  });
+    if (!file) return;
 
-  setGalleryImages(draft.gallery || []);
-  setTab("form");
-
-  setDrafts(drafts.filter((d) => d.id !== draft.id));
-};
-
-  // 🔥 Publish (ONLY here goes Existing Places)
-  const handlePublish = () => {
-    setPublishedPlaces([
-      ...publishedPlaces,
-      {
-        id: Date.now(),
-        name: form.title,
-        type: form.category,
-        country: form.state,
-        gallery: galleryImages,
-      },
-    ]);
-
-    setForm(initialForm);
-    setGalleryImages([]);
-    setTab("Existing Places");
+    setCoverImage({
+      file,
+      url: URL.createObjectURL(file),
+    });
   };
 
-  const handleDelete = (id) => {
-    setPublishedPlaces(publishedPlaces.filter((p) => p.id !== id));
-  };
+  // ==========================
+  // Gallery Upload
+  // ==========================
 
   const handleGalleryUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -152,10 +128,144 @@ const handleEditDraft = (draft) => {
     setGalleryImages((prev) => [...prev, ...images]);
   };
 
-  return (
-    <div className="min-h-screen px-6 py-10 text-white">
+  // ==========================
+  // Reset Form
+  // ==========================
 
-      {/* BACK */}
+  const resetForm = () => {
+    setForm(initialForm);
+    setGalleryImages([]);
+    setCoverImage(null);
+    setEditingDraftId(null);
+  };
+
+  // ==========================
+  // Save Draft
+  // ==========================
+
+  const handleSaveDraft = () => {
+    const draftData = {
+      id: editingDraftId || Date.now(),
+      ...form,
+      cover: coverImage,
+      gallery: galleryImages,
+    };
+
+    if (editingDraftId) {
+      setDrafts((prev) =>
+        prev.map((item) =>
+          item.id === editingDraftId ? draftData : item
+        )
+      );
+    } else {
+      setDrafts((prev) => [...prev, draftData]);
+    }
+
+    resetForm();
+
+    setTab("Drafts");
+  };
+
+  // ==========================
+  // Publish Place
+  // ==========================
+
+  const handlePublish = () => {
+    const place = {
+      id: Date.now(),
+      name: form.title,
+      type: form.category,
+      country: form.state,
+      city: form.city,
+      description: form.description,
+      cover: coverImage,
+      gallery: galleryImages,
+    };
+
+    setPublishedPlaces((prev) => [...prev, place]);
+
+    resetForm();
+
+    setTab("Existing Places");
+  };
+
+  // ==========================
+  // Delete Published
+  // ==========================
+
+  const handleDelete = (id) => {
+    setPublishedPlaces((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
+  };
+
+  // ==========================
+  // Delete Draft
+  // ==========================
+
+  const handleDeleteDraft = (id) => {
+    setDrafts((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
+  };
+
+  // ==========================
+  // Edit Draft
+  // ==========================
+
+  const handleEditDraft = (draft) => {
+    setEditingDraftId(draft.id);
+
+    setForm({
+      title: draft.title,
+      category: draft.category,
+      state: draft.state,
+      city: draft.city,
+      description: draft.description,
+      era: draft.era,
+      builtBy: draft.builtBy,
+      style: draft.style,
+      year: draft.year,
+      address: draft.address,
+      latitude: draft.latitude,
+      longitude: draft.longitude,
+      mapUrl: draft.mapUrl,
+    });
+
+    setGalleryImages(draft.gallery || []);
+
+    setCoverImage(draft.cover || null);
+
+    setTab("Add Place");
+  };
+
+  // ==========================
+  // Approve Draft
+  // ==========================
+
+  const handleApproveDraft = (draft) => {
+    const place = {
+      id: Date.now(),
+      name: draft.title,
+      type: draft.category,
+      country: draft.state,
+      city: draft.city,
+      description: draft.description,
+      cover: draft.cover,
+      gallery: draft.gallery,
+    };
+
+    setPublishedPlaces((prev) => [...prev, place]);
+
+    setDrafts((prev) =>
+      prev.filter((item) => item.id !== draft.id)
+    );
+  };
+
+  return (
+        <div className="min-h-screen px-6 py-10 text-white">
+
+      {/* BACK BUTTON */}
       <Link
         to="/admin"
         className="inline-flex items-center gap-2 text-gray-300 mb-6"
@@ -164,426 +274,596 @@ const handleEditDraft = (draft) => {
         Back to Dashboard
       </Link>
 
-      {/* HEADER */}
-      <h1 className="text-4xl font-bold">Manage Heritage Places</h1>
+      {/* PAGE TITLE */}
+      <h1 className="text-4xl font-bold">
+        Manage Heritage Places
+      </h1>
 
       {/* TABS */}
       <div className="flex gap-4 my-6">
-        {["Add Place", "Drafts", "Existing Places"].map((t) => (
+        {["Add Place", "Drafts", "Existing Places"].map((item) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-5 py-2 rounded-xl ${
-              tab === t ? "bg-yellow-500 text-black" : "bg-white/10"
+            key={item}
+            onClick={() => setTab(item)}
+            className={`px-5 py-2 rounded-xl transition ${
+              tab === item
+                ? "bg-yellow-500 text-black"
+                : "bg-white/10 hover:bg-white/20"
             }`}
           >
-            {t}
+            {item}
           </button>
         ))}
       </div>
 
-      {/* FORM */}
-      {tab === "form" && (
+      {/* ========================= */}
+      {/* ADD PLACE */}
+      {/* ========================= */}
+
+      {tab === "Add Place" && (
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* LEFT FORM */}
-           {/* FORM */}
-
-        {tab === "form" && (
-
+          {/* LEFT SIDE */}
           <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-3xl p-6">
 
-
-
-            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-
-
+            <h2 className="text-xl font-semibold mb-4">
+              Basic Information
+            </h2>
 
             <input
-
+              type="text"
               name="title"
-
               value={form.title}
-
               onChange={handleChange}
-
               placeholder="Place Title"
-
               className="w-full mb-4 p-3 rounded-xl bg-white/5 border border-white/10"
-
             />
-
-
 
             <div className="grid md:grid-cols-3 gap-4 mb-4">
 
-              <select
-
-  name="category"
-
-  value={form.category}
-
-  onChange={handleChange}
-
-  className="p-3 rounded-xl border border-white/20 text-white cursor-pointer"
-
->
-
-  <option value=""disabled hidden className="bg-gray-200 text-black">Select Category</option>
-
-  <option value="Monument" className="bg-gray-200 text-black">Monument</option>
-
-  <option value="Temple" className="bg-gray-200 text-black">Temple</option>
-
-  <option value="Fort" className="bg-gray-200 text-black">Fort</option>
-
-</select>
-
-
+              {/* CATEGORY */}
 
               <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="p-3 rounded-xl border border-white/20 text-white cursor-pointer"
+              >
+                <option
+                  value=""
+                  disabled
+                  hidden
+                  className="bg-gray-200 text-black"
+                >
+                  Select Category
+                </option>
 
-  name="state"
+                <option
+                  value="Monument"
+                  className="bg-gray-200 text-black"
+                >
+                  Monument
+                </option>
 
-  value={form.state}
+                <option
+                  value="Temple"
+                  className="bg-gray-200 text-black"
+                >
+                  Temple
+                </option>
 
-  onChange={handleChange}
+                <option
+                  value="Fort"
+                  className="bg-gray-200 text-black"
+                >
+                  Fort
+                </option>
 
-  className="p-3 rounded-xl  border border-white/20 text-white cursor-pointer"
+              </select>
 
->
-
-  <option value="" disabled hidden className="bg-gray-200 text-black">Select State</option>
-
-  <option value="Madhya Pradesh" className="bg-gray-200 text-black">Madhya Pradesh</option>
-
-  <option value="Rajasthan" className="bg-gray-200 text-black">Rajasthan</option>
-
-  <option value="Uttar Pradesh" className="bg-gray-200 text-black">Uttar Pradesh</option>
-
-  <option value="Maharashtra" className="bg-gray-200 text-black">Maharashtra</option>
-
-  <option value="Gujarat" className="bg-gray-200 text-black">Gujarat</option>
-
-</select>
+              {/* STATE */}
 
               <select
+                name="state"
+                value={form.state}
+                onChange={handleChange}
+                className="p-3 rounded-xl border border-white/20 text-white cursor-pointer"
+              >
+                <option
+                  value=""
+                  disabled
+                  hidden
+                  className="bg-gray-200 text-black"
+                >
+                  Select State
+                </option>
 
-  name="city"
+                <option
+                  value="Madhya Pradesh"
+                  className="bg-gray-200 text-black"
+                >
+                  Madhya Pradesh
+                </option>
 
-  value={form.city}
+                <option
+                  value="Rajasthan"
+                  className="bg-gray-200 text-black"
+                >
+                  Rajasthan
+                </option>
 
-  onChange={handleChange}
+                <option
+                  value="Uttar Pradesh"
+                  className="bg-gray-200 text-black"
+                >
+                  Uttar Pradesh
+                </option>
 
-  className="p-3 rounded-xl border border-white/20 text-white cursor-pointer"
+                <option
+                  value="Maharashtra"
+                  className="bg-gray-200 text-black"
+                >
+                  Maharashtra
+                </option>
 
->
+                <option
+                  value="Gujarat"
+                  className="bg-gray-200 text-black"
+                >
+                  Gujarat
+                </option>
 
-  <option value="" disabled hidden className="bg-gray-200 text-black">Select City</option>
+              </select>
 
-  <option value="Bhopal" className="bg-gray-200 text-black">Bhopal</option>
+              {/* CITY */}
 
-  <option value="Indore" className="bg-gray-200 text-black">Indore</option>
+              <select
+                name="city"
+                value={form.city}
+                onChange={handleChange}
+                className="p-3 rounded-xl border border-white/20 text-white cursor-pointer"
+              >
+                <option
+                  value=""
+                  disabled
+                  hidden
+                  className="bg-gray-200 text-black"
+                >
+                  Select City
+                </option>
 
-  <option value="Jaipur" className="bg-gray-200 text-black">Jaipur</option>
+                <option
+                  value="Bhopal"
+                  className="bg-gray-200 text-black"
+                >
+                  Bhopal
+                </option>
 
-  <option value="Agra" className="bg-gray-200 text-black">Agra</option>
+                <option
+                  value="Indore"
+                  className="bg-gray-200 text-black"
+                >
+                  Indore
+                </option>
 
-  <option value="Mumbai" className="bg-gray-200 text-black">Mumbai</option>
+                <option
+                  value="Jaipur"
+                  className="bg-gray-200 text-black"
+                >
+                  Jaipur
+                </option>
 
-</select>
+                <option
+                  value="Agra"
+                  className="bg-gray-200 text-black"
+                >
+                  Agra
+                </option>
+
+                <option
+                  value="Mumbai"
+                  className="bg-gray-200 text-black"
+                >
+                  Mumbai
+                </option>
+
+              </select>
 
             </div>
 
-
+            {/* DESCRIPTION */}
 
             <textarea
-
               name="description"
-
+              value={form.description}
               onChange={handleChange}
-
-              rows="4"
-
+              rows={4}
               placeholder="Description"
-
               className="w-full mb-6 p-3 rounded-xl bg-white/5 border border-white/10"
-
             />
 
-
+            {/* ========================= */}
+            {/* HISTORICAL INFORMATION */}
+            {/* ========================= */}
 
             <h2 className="text-lg font-semibold mb-3">
-
               Historical Information
-
             </h2>
-
-
 
             <div className="grid md:grid-cols-3 gap-4 mb-4">
 
               <input
-
+                type="text"
                 name="era"
-
+                value={form.era}
                 onChange={handleChange}
-
                 placeholder="Era"
-
                 className="p-3 rounded-xl bg-white/5 border border-white/10"
-
               />
 
               <input
-
+                type="text"
                 name="builtBy"
-
+                value={form.builtBy}
                 onChange={handleChange}
-
                 placeholder="Built By"
-
                 className="p-3 rounded-xl bg-white/5 border border-white/10"
-
               />
 
               <input
-
+                type="text"
                 name="style"
-
+                value={form.style}
                 onChange={handleChange}
-
                 placeholder="Style"
-
                 className="p-3 rounded-xl bg-white/5 border border-white/10"
-
               />
 
             </div>
 
-
-
             <input
-
+              type="text"
               name="year"
-
+              value={form.year}
               onChange={handleChange}
-
               placeholder="Year"
-
               className="w-full mb-6 p-3 rounded-xl bg-white/5 border border-white/10"
-
             />
-
-
+                        {/* ========================= */}
+            {/* LOCATION */}
+            {/* ========================= */}
 
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-
-              <MapPin size={18} /> Location
-
+              <MapPin size={18} />
+              Location
             </h2>
 
-
-
             <input
-
+              type="text"
               name="address"
-
+              value={form.address}
               onChange={handleChange}
-
               placeholder="Address"
-
               className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/10"
-
             />
-
-
 
             <div className="grid md:grid-cols-2 gap-4 mb-3">
 
               <input
-
+                type="text"
                 name="latitude"
-
+                value={form.latitude}
                 onChange={handleChange}
-
                 placeholder="Latitude"
-
                 className="p-3 rounded-xl bg-white/5 border border-white/10"
-
               />
 
               <input
-
+                type="text"
                 name="longitude"
-
+                value={form.longitude}
                 onChange={handleChange}
-
                 placeholder="Longitude"
-
                 className="p-3 rounded-xl bg-white/5 border border-white/10"
-
               />
 
             </div>
 
-
-
             <input
-
+              type="text"
               name="mapUrl"
-
+              value={form.mapUrl}
               onChange={handleChange}
-
               placeholder="Map URL"
-
               className="w-full p-3 rounded-xl bg-white/5 border border-white/10"
-
             />
 
           </div>
 
-        )}
-
-
+          {/* ========================= */}
           {/* RIGHT PANEL */}
+          {/* ========================= */}
+
           <div className="space-y-4">
 
-            {/* COVER */}
+            {/* COVER IMAGE */}
+
             <div className="bg-white/5 p-4 rounded-2xl">
-              <h2 className="mb-2">Cover Image</h2>
-              <div className="h-32 bg-white/10 rounded mb-2"></div>
-              <button className="w-full bg-yellow-500 text-black py-2 rounded">
-                Upload Cover
-              </button>
+
+              <h2 className="mb-2 font-semibold">
+                Cover Image
+              </h2>
+
+              <div className="h-32 bg-white/10 rounded mb-3 overflow-hidden flex items-center justify-center">
+
+                {coverImage ? (
+                  <img
+                    src={coverImage.url}
+                    alt="Cover"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-sm">
+                    No Cover Selected
+                  </span>
+                )}
+
+              </div>
+
+              <label className="block">
+
+                <div className="w-full bg-yellow-500 text-black py-2 rounded text-center cursor-pointer">
+                  Upload Cover
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCoverUpload}
+                />
+
+              </label>
+
             </div>
 
+            {/* ========================= */}
             {/* GALLERY */}
+            {/* ========================= */}
+
             <div className="bg-white/5 p-4 rounded-2xl">
-              <h2 className="mb-2">Gallery</h2>
+
+              <h2 className="mb-2 font-semibold">
+                Gallery
+              </h2>
 
               <label className="block cursor-pointer bg-white/10 p-2 rounded text-center">
-                <ImageIcon className="inline" /> Upload Images
+
+                <ImageIcon className="inline mr-2" />
+
+                Upload Images
+
                 <input
                   type="file"
                   multiple
+                  accept="image/*"
                   className="hidden"
                   onChange={handleGalleryUpload}
                 />
+
               </label>
 
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {galleryImages.map((img, i) => (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+
+                {galleryImages.map((image, index) => (
+
                   <img
-                    key={i}
-                    src={img.url}
+                    key={index}
+                    src={image.url}
+                    alt=""
                     className="h-20 w-full object-cover rounded"
                   />
+
                 ))}
+
               </div>
+
             </div>
 
-            {/* ACTIONS */}
+            {/* ========================= */}
+            {/* ACTION BUTTONS */}
+            {/* ========================= */}
+
             <div className="bg-white/5 p-4 rounded-2xl">
+
               <button
                 onClick={handleSaveDraft}
                 className="w-full bg-gray-700 py-2 mb-2 rounded flex items-center justify-center gap-2"
               >
-                <Save size={16} /> Save Draft
+                <Save size={16} />
+
+                {editingDraftId
+                  ? "Update Draft"
+                  : "Save Draft"}
+
               </button>
 
               <button
                 onClick={handlePublish}
                 className="w-full bg-yellow-500 text-black py-2 rounded flex items-center justify-center gap-2"
               >
-                <Send size={16} /> Publish
+                <Send size={16} />
+
+                Publish
+
               </button>
+
             </div>
 
           </div>
+
+        </div>
+      )}
+            {/* ========================= */}
+      {/* DRAFTS */}
+      {/* ========================= */}
+
+      {tab === "Drafts" && (
+        <div className="grid md:grid-cols-3 gap-5 mt-6">
+
+          {drafts.length === 0 ? (
+
+            <p className="text-gray-400">
+              No Drafts Available
+            </p>
+
+          ) : (
+
+            drafts.map((item) => (
+
+              <div
+                key={item.id}
+                className="bg-white/5 p-4 rounded-2xl"
+              >
+
+                {/* Cover Preview */}
+
+                <div className="h-28 bg-white/10 rounded mb-3 overflow-hidden flex items-center justify-center">
+
+                  {item.cover ? (
+                    <img
+                      src={item.cover.url}
+                      alt={item.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-sm">
+                      No Cover
+                    </span>
+                  )}
+
+                </div>
+
+                <h3 className="font-bold text-lg">
+                  {item.title}
+                </h3>
+
+                <p className="text-sm text-gray-400">
+                  {item.category} • {item.state}
+                </p>
+
+                <div className="flex justify-between mt-4">
+
+                  <button
+                    onClick={() => handleEditDraft(item)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleApproveDraft(item)}
+                    className="text-green-400 hover:text-green-300"
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteDraft(item.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+            ))
+
+          )}
+
         </div>
       )}
 
-      
-      {/* Draft Section */}
-{tab === "draft" && (
-  <div className="grid md:grid-cols-3 gap-5 mt-6">
+      {/* ========================= */}
+      {/* EXISTING PLACES */}
+      {/* ========================= */}
 
-    {drafts.length === 0 ? (
-      <p className="text-gray-400">No Drafts Available</p>
-    ) : (
-      drafts.map((item) => (
-        <div key={item.id} className="bg-white/5 p-4 rounded-2xl">
-
-          <div className="h-28 bg-white/10 rounded mb-2"></div>
-
-          <h3 className="font-bold">{item.title}</h3>
-
-          <p className="text-sm text-gray-400">
-            {item.category} • {item.state}
-          </p>
-
-          <div className="flex justify-between mt-3">
-
-            <button
-              onClick={() => handleEditDraft(item)}
-              className="text-blue-400"
-            >
-              Edit
-            </button>
-
-            <button
-              onClick={() => handleApproveDraft(item)}
-              className="text-green-400"
-            >
-              Approve
-            </button>
-
-            <button
-              onClick={() => handleDeleteDraft(item.id)}
-              className="text-red-400"
-            >
-              Delete
-            </button>
-
-          </div>
-
-        </div>
-      ))
-    )}
-
-  </div>
-)}
-
-      {/* Existing Places (ONLY PUBLISHED) */}
       {tab === "Existing Places" && (
+
         <div className="grid md:grid-cols-3 gap-5 mt-6">
 
-          {publishedPlaces.map((item) => (
-            <div key={item.id} className="bg-white/5 p-4 rounded-2xl">
+          {publishedPlaces.length === 0 ? (
 
-              <div className="h-28 bg-white/10 rounded mb-2"></div>
+            <p className="text-gray-400">
+              No Published Places
+            </p>
 
-              <h3 className="font-bold">{item.name}</h3>
-              <p className="text-sm text-gray-400">
-                {item.type} • {item.country}
-              </p>
+          ) : (
 
-              <div className="flex justify-between mt-3">
-                <button className="text-sm">Edit</button>
+            publishedPlaces.map((item) => (
 
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="text-sm text-red-400"
-                >
-                  Delete
-                </button>
+              <div
+                key={item.id}
+                className="bg-white/5 p-4 rounded-2xl"
+              >
+
+                {/* Cover */}
+
+                <div className="h-28 bg-white/10 rounded mb-3 overflow-hidden flex items-center justify-center">
+
+                  {item.cover ? (
+
+                    <img
+                      src={item.cover.url}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+
+                  ) : (
+
+                    <span className="text-gray-400 text-sm">
+                      No Cover
+                    </span>
+
+                  )}
+
+                </div>
+
+                <h3 className="font-bold text-lg">
+                  {item.name}
+                </h3>
+
+                <p className="text-sm text-gray-400">
+                  {item.type} • {item.country}
+                </p>
+
+                <div className="flex justify-between mt-4">
+
+                  <button
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
               </div>
 
-            </div>
-          ))}
+            ))
+
+          )}
 
         </div>
+
       )}
 
     </div>
