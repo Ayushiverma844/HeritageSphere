@@ -10,6 +10,7 @@ import Favorites from "./pages/MyFavorites";
 import KnowledgeHub from "./pages/KnowledgeHub";
 import Story from "./pages/Story";
 import Admin from "./pages/AdminDashboard";
+import AdminManagePlaces from "./components/Admin/ManagePlaces";
 const App = () => {
   return (
    
@@ -68,6 +69,7 @@ const App = () => {
   <Route path="/profile" element={<Profile />} />
 
   <Route path="/admin" element={<Admin />} />
+  <Route path="/admin/manage-places" element={<AdminManagePlaces />} />
 </Routes>
 </div>
   )

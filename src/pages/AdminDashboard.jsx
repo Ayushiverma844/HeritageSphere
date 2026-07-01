@@ -11,6 +11,7 @@ import {
   Landmark,
 } from "lucide-react";
 
+
 const stats = [
   {
     title: "Heritage Places",
@@ -38,22 +39,27 @@ const actions = [
   {
     title: "Manage Places",
     icon: MapPinned,
+    path : "/admin/manage-places",
   },
   {
     title: "Manage Stories",
     icon: BookOpen,
+    path : "/admin/manage-stories"
   },
   {
     title: "Manage Categories",
     icon: Layers3,
+    path : "/admin/manage-categories"
   },
   {
     title: "Manage Users",
     icon: Users,
+    path : "/admin/manage-users"
   },
   {
     title: "AI Story Generator",
     icon: Sparkles,
+    path : "/admin/ai-story-generator"
   },
 ];
 
@@ -470,20 +476,22 @@ const AdminDashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {actions.map((action) => (
-              <button
-                key={action.title}
-                className="
-                text-left
-                bg-white/5
-                border border-white/10
-                rounded-3xl
-                p-6
-                hover:border-heritage-gold
-                hover:-translate-y-1
-                transition-all
-                duration-300
-                "
-              >
+  <Link
+    key={action.title}
+    to={action.path}
+    className="
+    block
+    text-left
+    bg-white/5
+    border border-white/10
+    rounded-3xl
+    p-6
+    hover:border-heritage-gold
+    hover:-translate-y-1
+    transition-all
+    duration-300
+    "
+  >
 
                 <action.icon
                   size={28}
@@ -499,7 +507,7 @@ const AdminDashboard = () => {
                   Open
                 </div>
 
-              </button>
+              </Link>
             ))}
 
           </div>
