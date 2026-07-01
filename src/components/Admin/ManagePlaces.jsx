@@ -83,7 +83,10 @@ const ManagePlaces = () => {
 
   const [coverImage, setCoverImage] = useState(null);
 
-  const [editingDraftId, setEditingDraftId] = useState(null);
+  const [editingType, setEditingType] = useState(null);
+// "draft" | "published"
+
+const [editingId, setEditingId] = useState(null);
 
   // ==========================
   // Handle Input Change
@@ -132,34 +135,36 @@ const ManagePlaces = () => {
   // Reset Form
   // ==========================
 
-  const resetForm = () => {
-    setForm(initialForm);
-    setGalleryImages([]);
-    setCoverImage(null);
-    setEditingDraftId(null);
-  };
+const resetForm = () => {
+  setForm(initialForm);
+  setGalleryImages([]);
+  setCoverImage(null);
+
+  setEditingId(null);
+  setEditingType(null);
+};
 
   // ==========================
   // Save Draft
   // ==========================
 
   const handleSaveDraft = () => {
-    const draftData = {
-      id: editingDraftId || Date.now(),
-      ...form,
-      cover: coverImage,
-      gallery: galleryImages,
-    };
+     const draftData = {
+  id: editingId || Date.now(),
+  ...form,
+  cover: coverImage,
+  gallery: galleryImages,
+};
 
-    if (editingDraftId) {
-      setDrafts((prev) =>
-        prev.map((item) =>
-          item.id === editingDraftId ? draftData : item
-        )
-      );
-    } else {
-      setDrafts((prev) => [...prev, draftData]);
-    }
+   if (editingType === "draft") {
+  setDrafts((prev) =>
+    prev.map((item) =>
+      item.id === editingId ? draftData : item
+    )
+  );
+} else {
+  setDrafts((prev) => [...prev, draftData]);
+}
 
     resetForm();
 
@@ -170,24 +175,43 @@ const ManagePlaces = () => {
   // Publish Place
   // ==========================
 
-  const handlePublish = () => {
-    const place = {
-      id: Date.now(),
-      name: form.title,
-      type: form.category,
-      country: form.state,
-      city: form.city,
-      description: form.description,
-      cover: coverImage,
-      gallery: galleryImages,
-    };
+ const handlePublish = () => {
+  const place = {
+    id: editingId || Date.now(),
+    name: form.title,
+    type: form.category,
+    country: form.state,
+    city: form.city,
+    description: form.description,
 
-    setPublishedPlaces((prev) => [...prev, place]);
+    era: form.era,
+    builtBy: form.builtBy,
+    style: form.style,
+    year: form.year,
 
-    resetForm();
+    address: form.address,
+    latitude: form.latitude,
+    longitude: form.longitude,
+    mapUrl: form.mapUrl,
 
-    setTab("Existing Places");
+    cover: coverImage,
+    gallery: galleryImages,
   };
+
+  if (editingType === "published") {
+    setPublishedPlaces((prev) =>
+      prev.map((item) =>
+        item.id === editingId ? place : item
+      )
+    );
+  } else {
+    setPublishedPlaces((prev) => [...prev, place]);
+  }
+
+  resetForm();
+  setTab("Existing Places");
+};
+
 
   // ==========================
   // Delete Published
@@ -210,41 +234,42 @@ const ManagePlaces = () => {
   };
 
   // ==========================
-  // Edit Draft
+  // Edit function 
   // ==========================
+  
+const handleEdit = (item, type) => {
 
-  const handleEditDraft = (draft) => {
-    setEditingDraftId(draft.id);
+  setEditingType(type);
+  setEditingId(item.id);
 
-    setForm({
-      title: draft.title,
-      category: draft.category,
-      state: draft.state,
-      city: draft.city,
-      description: draft.description,
-      era: draft.era,
-      builtBy: draft.builtBy,
-      style: draft.style,
-      year: draft.year,
-      address: draft.address,
-      latitude: draft.latitude,
-      longitude: draft.longitude,
-      mapUrl: draft.mapUrl,
-    });
+  setForm({
+    title: item.title || item.name,
+    category: item.category || item.type,
+    state: item.state || item.country,
+    city: item.city || "",
+    description: item.description || "",
+    era: item.era || "",
+    builtBy: item.builtBy || "",
+    style: item.style || "",
+    year: item.year || "",
+    address: item.address || "",
+    latitude: item.latitude || "",
+    longitude: item.longitude || "",
+    mapUrl: item.mapUrl || "",
+  });
 
-    setGalleryImages(draft.gallery || []);
+  setCoverImage(item.cover || null);
+  setGalleryImages(item.gallery || []);
 
-    setCoverImage(draft.cover || null);
-
-    setTab("Add Place");
-  };
-
+  setTab("Add Place");
+};
   // ==========================
   // Approve Draft
   // ==========================
 
   const handleApproveDraft = (draft) => {
     const place = {
+      ...draft,
       id: Date.now(),
       name: draft.title,
       type: draft.category,
@@ -254,6 +279,7 @@ const ManagePlaces = () => {
       cover: draft.cover,
       gallery: draft.gallery,
     };
+
 
     setPublishedPlaces((prev) => [...prev, place]);
 
@@ -529,7 +555,7 @@ const ManagePlaces = () => {
               placeholder="Year"
               className="w-full mb-6 p-3 rounded-xl bg-white/5 border border-white/10"
             />
-                        {/* ========================= */}
+            {/* ========================= */}
             {/* LOCATION */}
             {/* ========================= */}
 
@@ -577,8 +603,14 @@ const ManagePlaces = () => {
               placeholder="Map URL"
               className="w-full p-3 rounded-xl bg-white/5 border border-white/10"
             />
-
+            <button
+  onClick={resetForm}
+  className=" border-none text-red-400 py-2  mt-5 rounded-full text-xl font-medium cursor-pointer hover:text-red-300 transition-all"
+>
+  {editingType ? "Cancel Editing" : "Clear Form"}
+</button>
           </div>
+           
 
           {/* ========================= */}
           {/* RIGHT PANEL */}
@@ -682,9 +714,9 @@ const ManagePlaces = () => {
               >
                 <Save size={16} />
 
-                {editingDraftId
-                  ? "Update Draft"
-                  : "Save Draft"}
+              {editingType === "draft"
+  ? "Update Draft"
+  : "Save Draft"}
 
               </button>
 
@@ -694,7 +726,9 @@ const ManagePlaces = () => {
               >
                 <Send size={16} />
 
-                Publish
+{editingType === "published"
+  ? "Update Place"
+  : "Publish"}
 
               </button>
 
@@ -755,7 +789,7 @@ const ManagePlaces = () => {
                 <div className="flex justify-between mt-4">
 
                   <button
-                    onClick={() => handleEditDraft(item)}
+                    onClick={() => handleEdit(item, "draft")}
                     className="text-blue-400 hover:text-blue-300"
                   >
                     Edit
@@ -842,6 +876,7 @@ const ManagePlaces = () => {
                 <div className="flex justify-between mt-4">
 
                   <button
+                    onClick={() => handleEdit(item, "published")}
                     className="text-blue-400 hover:text-blue-300"
                   >
                     Edit

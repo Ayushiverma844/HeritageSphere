@@ -11,6 +11,7 @@ import KnowledgeHub from "./pages/KnowledgeHub";
 import Story from "./pages/Story";
 import Admin from "./pages/AdminDashboard";
 import AdminManagePlaces from "./components/Admin/ManagePlaces";
+import AdminManageStories from "./components/Admin/ManageStories";
 const App = () => {
   return (
    
@@ -70,6 +71,7 @@ const App = () => {
 
   <Route path="/admin" element={<Admin />} />
   <Route path="/admin/manage-places" element={<AdminManagePlaces />} />
+  <Route path="/admin/manage-stories" element={<AdminManageStories />} />
 </Routes>
 </div>
   )
