@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -10,7 +11,7 @@ import {
   Clock3,
   Landmark,
 } from "lucide-react";
-
+import ManageCategories from "../components/Admin/ManageCategories";
 
 const stats = [
   {
@@ -49,13 +50,9 @@ const actions = [
   {
     title: "Manage Categories",
     icon: Layers3,
-    path : "/admin/manage-categories"
+    
   },
-  {
-    title: "Manage Users",
-    icon: Users,
-    path : "/admin/manage-users"
-  },
+ 
   {
     title: "AI Story Generator",
     icon: Sparkles,
@@ -85,8 +82,12 @@ const approvals = [
   },
 ];
 
+
 const AdminDashboard = () => {
-  return (
+
+const [showCategoryModal, setShowCategoryModal] =
+  useState(false);
+    return (
     <div className="min-h-screen pt-12 px-6">
         <Link
   to="/"
@@ -476,45 +477,94 @@ const AdminDashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {actions.map((action) => (
-  <Link
-    key={action.title}
-    to={action.path}
-    className="
-    block
-    text-left
-    bg-white/5
-    border border-white/10
-    rounded-3xl
-    p-6
-    hover:border-heritage-gold
-    hover:-translate-y-1
-    transition-all
-    duration-300
-    "
-  >
 
-                <action.icon
-                  size={28}
-                  className="text-heritage-gold mb-4"
-                />
+  action.title === "Manage Categories" ? (
 
-                <h3 className="text-lg text-white font-medium">
-                  {action.title}
-                </h3>
+    <button
+      key={action.title}
+      onClick={() => setShowCategoryModal(true)}
+      className="
+      text-left
+      bg-white/5
+      border
+      border-white/10
+      rounded-3xl
+      p-6
+      hover:border-heritage-gold
+      hover:-translate-y-1
+      transition-all
+      duration-300
+      "
+    >
 
-                <div className="mt-5 flex items-center gap-2 text-heritage-gold">
-                  <Plus size={16} />
-                  Open
-                </div>
+      <action.icon
+        size={28}
+        className="text-heritage-gold mb-4"
+      />
 
-              </Link>
-            ))}
+      <h3 className="text-lg text-white font-medium">
+        {action.title}
+      </h3>
+
+      <div className="mt-5 flex items-center gap-2 text-heritage-gold">
+        <Plus size={16}/>
+        Open
+      </div>
+
+    </button>
+
+  ) : (
+
+    <Link
+      key={action.title}
+      to={action.path}
+      className="
+      block
+      text-left
+      bg-white/5
+      border
+      border-white/10
+      rounded-3xl
+      p-6
+      hover:border-heritage-gold
+      hover:-translate-y-1
+      transition-all
+      duration-300
+      "
+    >
+
+      <action.icon
+        size={28}
+        className="text-heritage-gold mb-4"
+      />
+
+      <h3 className="text-lg text-white font-medium">
+        {action.title}
+      </h3>
+
+      <div className="mt-5 flex items-center gap-2 text-heritage-gold">
+        <Plus size={16}/>
+        Open
+      </div>
+
+    </Link>
+
+  )
+
+))}
 
           </div>
 
         </div>
 
       </div>
+      {showCategoryModal && (
+
+  <ManageCategories
+    onClose={() => setShowCategoryModal(false)}
+  />
+
+)}
 
     </div>
   );

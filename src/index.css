@@ -170,3 +170,13 @@ body,
   color: #d4af37;
   font-weight: bold;
 }
+/* Hide scrollbar but allow scrolling */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none;    /* Firefox */
+}

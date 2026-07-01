@@ -12,6 +12,8 @@ import Story from "./pages/Story";
 import Admin from "./pages/AdminDashboard";
 import AdminManagePlaces from "./components/Admin/ManagePlaces";
 import AdminManageStories from "./components/Admin/ManageStories";
+import AdminManageCategories from "./components/Admin/ManageCategories";
+import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
 const App = () => {
   return (
    
@@ -72,6 +74,8 @@ const App = () => {
   <Route path="/admin" element={<Admin />} />
   <Route path="/admin/manage-places" element={<AdminManagePlaces />} />
   <Route path="/admin/manage-stories" element={<AdminManageStories />} />
+  <Route path="/admin/manage-categories" element={<AdminManageCategories />} />
+  <Route path="/admin/ai-story-generator" element={<AiStoryGenerator />} />
 </Routes>
 </div>
   )
