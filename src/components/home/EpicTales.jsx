@@ -4,21 +4,25 @@ import { useNavigate } from "react-router-dom";
 
 const stories = [
   {
+    story_id: 1,
     title: "Ramayana",
     subtitle: "The epic of Lord Rama",
     image: "/stories/ramayana.jpg",
   },
   {
+    story_id: 2,
     title: "Mahabharata",
     subtitle: "The great Indian epic",
     image: "/stories/mahabharata.jpg",
   },
   {
+    story_id: 3,
     title: "The Legend of Krishna",
     subtitle: "The untold stories",
     image: "/stories/krishna.jpg",
   },
   {
+    story_id: 4,
     title: "Samudra Manthan",
     subtitle: "The cosmic churning",
     image: "/stories/samudra.jpg",
@@ -47,13 +51,13 @@ const EpicTales = () => {
 
         {stories.map((story, index) => (
           <div
-            key={index}
-             onClick={() => navigate(`/story/${story.id}`)}
+            key={story.story_id}
+             onClick={() => navigate(`/stories/${story.story_id}`)}
             className="group relative rounded-2xl overflow-hidden border border-heritage-gold/20"
           >
             <img
               src={story.image}
-              alt=""
+              alt={story.title}
               className="h-52 w-full object-cover group-hover:scale-110 transition duration-500"
             />
 
@@ -70,7 +74,10 @@ const EpicTales = () => {
               </p>
 
               <button
-  onClick={() => navigate("/story")}
+  onClick={(e)=>{
+    e.stopPropagation();
+    navigate(`/stories/${story.story_id}`);
+}}
   className="
   absolute
   bottom-4

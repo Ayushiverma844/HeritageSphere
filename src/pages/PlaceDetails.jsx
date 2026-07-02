@@ -11,6 +11,7 @@ import {
   Tag,
   ChevronRight,
   ArrowLeft,
+  useLocation
 } from "lucide-react";
 
 import heroImg from "../assests/1.jpg";
@@ -24,6 +25,8 @@ const PlaceDetails = () => {
 
   const tabs = ["About", "Gallery", "Stories", "Reviews", "Nearby"];
   const { id } = useParams();
+  const location = useLocation();
+  const place = location.state?.place;
 
   return (
     <div className="min-h-screen text-white">
@@ -32,7 +35,7 @@ const PlaceDetails = () => {
       <section className="relative h-125 overflow-hidden">
 
         <img
-          src={heroImg}
+          src={place?.image || heroImg}
           alt="Place"
           className="w-full h-full object-cover"
         />
@@ -70,23 +73,23 @@ const PlaceDetails = () => {
         <div className="absolute bottom-10 left-0 right-0 px-6 md:px-20">
 
           <span className="px-3 py-1 text-xs rounded-full bg-heritage-gold text-black font-semibold">
-            Fort
+            {place?.category}
           </span>
 
           <h1 className="text-4xl md:text-6xl font-bold mt-4">
-            Red Fort
+            {place?.name}
           </h1>
 
           <div className="flex flex-wrap items-center gap-6 mt-4 text-gray-300">
 
             <div className="flex items-center gap-2">
               <MapPin size={18} />
-              Delhi, India
+              {place?.location}
             </div>
 
             <div className="flex items-center gap-2 text-yellow-400">
               <Star size={18} fill="currentColor" />
-              4.7 (1200 Reviews)
+              {place?.rating}
             </div>
 
           </div>
@@ -123,7 +126,7 @@ const PlaceDetails = () => {
           <div className="lg:col-span-2">
 
             <h2 className="text-2xl font-bold mb-4">
-              About Red Fort
+             About {place.name}
             </h2>
 
             <p className="text-gray-300 leading-8">

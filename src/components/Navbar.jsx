@@ -290,7 +290,7 @@ transition-all duration-300"
 
       {/* Mobile Sidebar */}
       <div
-        className={`fixed top-20 right-0 h-screen w-72 max-w-[85vw]
+        className={`fixed top-20 right-0 h-[calc(100vh-80px)] w-72 max-w-[85vw]
         bg-heritage-dark/95 backdrop-blur-lg border-l border-heritage-gold/20
         transform transition-transform duration-300 z-50
         ${isOpen ? "translate-x-0" : "translate-x-full"}
@@ -308,7 +308,7 @@ transition-all duration-300"
           </Link>
 
           <Link
-            to="/explore"
+            to="/places"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold transition-colors"
           >
@@ -317,7 +317,7 @@ transition-all duration-300"
           </Link>
 
           <Link
-            to="/knowledgehub"
+            to="/knowledge-hub"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold transition-colors"
           >
@@ -337,15 +337,12 @@ transition-all duration-300"
           <hr className="border-heritage-gold/20" />
 
           {/* Mobile Actions */}
-          <button className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold">
-            <Search size={20} />
-            Search
-          </button>
-
-          <button className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold">
+         
+           
+          <Link to="/profile" className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold">
             <User size={20} />
             Profile
-          </button>
+          </Link>
           <Link to="/auth">
           <button className="mt-2 px-4 py-2 rounded-xl bg-heritage-gold text-black font-semibold hover:bg-heritage-light-gold transition-all duration-300">
   Login

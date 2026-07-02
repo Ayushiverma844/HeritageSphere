@@ -64,6 +64,14 @@ const Favorites = () => {
     : activities.filter(
         (item) => item.type === activeTab
       );
+  
+    if (filteredData.length === 0) {
+      return (
+    <p className="text-center text-gray-400">
+      No favorites yet.
+    </p>
+  );
+}
 
   return (
     <div className="min-h-screen text-white px-4 md:px-10 py-10">
@@ -291,6 +299,7 @@ const Favorites = () => {
                     </p>
 
                     <button
+                       onClick={() => navigate(`/place/${item.id}`)}
                       className="
                         mt-5
                         px-5

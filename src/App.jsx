@@ -61,11 +61,11 @@ const App = () => {
 
   <Route path="/places" element={<Explore />} />
 
-  <Route path="/place/:id" element={<PlaceDetails />} />
+  <Route path="/places/:id" element={<PlaceDetails />} />
 
   <Route path="/knowledge-hub" element={<KnowledgeHub />} />
 
-  <Route path="/story/:id" element={<Story />} />
+  <Route path="/stories/:id" element={<Story />} />
 
   <Route path="/favorites" element={<Favorites />} />
 

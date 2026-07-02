@@ -4,24 +4,28 @@ import { useNavigate } from "react-router-dom";
 
 const places = [
   {
+    place_id:1,
     name: "Khajuraho Temples",
     state: "Madhya Pradesh",
     rating: 4.8,
     image: "",
   },
   {
+    place_id:2,
     name: "Hawa Mahal",
     state: "Rajasthan",
     rating: 4.6,
     image: "/places/hawamahal.jpg",
   },
   {
+    place_id:3,
     name: "Konark Sun Temple",
     state: "Odisha",
     rating: 4.9,
     image: "/places/konark.jpg",
   },
   {
+    place_id:4,
     name: "Red Fort",
     state: "Delhi",
     rating: 4.7,
@@ -62,9 +66,9 @@ const HeritageHighlights = () => {
 
         {places.map((place, index) => (
           <div
-            key={index}
+            key={place.place_id}
              onClick={() =>
-    navigate(`/place/${place.id}`, {
+    navigate(`/places/${place.id}`, {
       state: {
         place: place,
       },
@@ -76,7 +80,7 @@ const HeritageHighlights = () => {
 
               <img
                 src={place.image}
-                alt=""
+                alt={place.name}
                 className="h-52 w-full object-cover group-hover:scale-110 transition duration-500"
               />
 

@@ -86,7 +86,7 @@ const Landing = () => {
               const Icon = item.icon;
 
               return (
-                <button key={index}
+                <button key={item.name}
                      onClick={() =>navigate("/places", {
                                 state: {
                                 category: item.name,},})}

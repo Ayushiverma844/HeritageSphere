@@ -13,6 +13,7 @@ import img from "../assests/auth_bg.jpg";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#050816] text-white flex">
@@ -122,7 +123,7 @@ const Auth = () => {
 
 </div>
           {/* Animated Form */}
-          <div
+          <form
             key={isLogin ? "login" : "signup"}
             className="
 mt-8
@@ -159,6 +160,8 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
               </div>
             )}
 
+            
+
             <div className="mb-5">
               <label className="text-gray-400 block mb-2">
                 Email Address
@@ -174,29 +177,59 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
               </div>
             </div>
 
-            <div className="mb-3">
-              <label className="text-gray-400 block mb-2">
-                Password
-              </label>
+           
+            <div className="mb-5">
+  <label className="text-gray-400 block mb-2">
+    Password
+  </label>
 
-              <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
-                <Lock size={20} />
-                <input
-                  type="password"
-                  placeholder="At least 6 characters"
-                  className="bg-transparent outline-none w-full"
-                />
-                <Eye size={18} />
-              </div>
-            </div>
+  <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
+    <Lock size={20} />
 
-            {isLogin && (
-              <div className="text-right mb-6">
-                <button className="text-heritage-gold hover:underline">
-                  Forgot password?
-                </button>
-              </div>
-            )}
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="At least 6 characters"
+      className="bg-transparent outline-none w-full"
+    />
+
+    <Eye
+      size={18}
+      onClick={() => setShowPassword(!showPassword)}
+      className="cursor-pointer"
+    />
+  </div>
+  {isLogin && (
+  <div className="text-right mb-5 mt-2">
+    <button className="text-heritage-gold hover:underline">
+      Forgot Password?
+    </button>
+  </div>
+)}
+</div>
+
+{!isLogin && (
+  <div className="mb-5">
+    <label className="text-gray-400 block mb-2">
+      Confirm Password
+    </label>
+
+    <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
+      <Lock size={20} />
+
+      <input
+        type={showPassword ? "text" : "password"}
+        placeholder="Confirm password"
+        className="bg-transparent outline-none w-full"
+      />
+
+      <Eye
+        size={18}
+        onClick={() => setShowPassword(!showPassword)}
+        className="cursor-pointer"
+      />
+    </div>
+  </div>
+)}
 
             <button
               className="
@@ -210,7 +243,7 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
             >
               {isLogin ? "Login" : "Create Account"}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
