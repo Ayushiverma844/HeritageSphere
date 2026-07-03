@@ -8,7 +8,7 @@ const places = [
     name: "Khajuraho Temples",
     state: "Madhya Pradesh",
     rating: 4.8,
-    image: "",
+    image: "/places/khajuraho.jpg",
   },
   {
     place_id:2,

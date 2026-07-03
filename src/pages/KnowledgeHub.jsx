@@ -260,7 +260,7 @@ const KnowledgeHub = () => {
 
       <Link
         key={story.id}
-        to={`/story/${story.id}`}
+        to={`/stories/${story.id}`}
         className="group flex justify-center"
       >
 

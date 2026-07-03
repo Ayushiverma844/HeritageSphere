@@ -11,7 +11,6 @@ import {
   Tag,
   ChevronRight,
   ArrowLeft,
-  useLocation
 } from "lucide-react";
 
 import heroImg from "../assests/1.jpg";

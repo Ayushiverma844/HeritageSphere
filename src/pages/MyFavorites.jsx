@@ -299,7 +299,7 @@ const Favorites = () => {
                     </p>
 
                     <button
-                       onClick={() => navigate(`/place/${item.id}`)}
+                       onClick={() => navigate(`/places/${item.id}`)}
                       className="
                         mt-5
                         px-5
