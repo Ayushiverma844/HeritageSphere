@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@theme {
+  --color-heritage-dark: #08111d;
+  --color-heritage-navy: #0b1523;
+  --color-heritage-gold: #d4af37;
+  --color-heritage-light-gold: #f4d03f;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(
+    to bottom,
+    #0b1523 0%,
+    #08111d 50%,
+    #050b14 100%
+  );
+  background-image:
+    
+    linear-gradient(
+    to bottom,
+    rgba(8, 17, 29, 0.82) 0%,
+    rgba(8, 17, 29, 0.72) 35%,
+    rgba(8, 17, 29, 0.78) 70%,
+    rgba(5, 11, 20, 0.90) 100%
+  ),
+    url("./assests/bgAll.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* /explore page coin animation */
+@keyframes categoryReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(50px) scale(0.8);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateX(-5px) scale(1.05);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-categoryReveal {
+  animation: categoryReveal 0.55s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+
+/* knowledgehub page animation */
+.orbit-wrapper {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 55, 0.12);
+
+  box-shadow:
+    inset 0 0 20px rgba(212, 175, 55, 0.05),
+    0 0 25px rgba(212, 175, 55, 0.04);
+
+  animation: orbitRotate linear infinite;
+}
+
+.orbit-wrapper:hover {
+  animation-play-state: paused;
+}
+
+.moon-system {
+  position: absolute;
+  inset: -120px;
+  animation: moonRotate 12s linear infinite;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 9999px;
+  opacity: 0.4;
+  animation: twinkle 4s infinite;
+}
+
+
+
+.animate-fadeUp {
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes orbitRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes moonRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes twinkle {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.8);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+}
+
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+
+/* story page */
+.story-content p::first-letter {
+  font-size: 70px;
+  line-height: 1;
+  float: left;
+  margin-right: 12px;
+  color: #d4af37;
+  font-weight: bold;
+}
+/* Hide scrollbar but allow scrolling */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none;    /* Firefox */
+}
