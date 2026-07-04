@@ -1,19 +1,127 @@
 // both login and signup page
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import authService from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 import {
   Mail,
   Lock,
   User,
   Eye,
+  EyeOff,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import img from "../assests/auth_bg.jpg";
 
 const Auth = () => {
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+// input handler
+const handleChange = (e) => {
+  setFormData({
+    ...formData,
+    [e.target.name]: e.target.value,
+  });
+};
+
+// login sigup handler
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    setLoading(true);
+
+    if (isLogin) {
+       if (!formData.email.trim()) {
+  alert("Email is required");
+  return;
+}
+
+if (!formData.password.trim()) {
+  alert("Password is required");
+  return;
+}
+
+      const data = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+     login({
+  accessToken: data.accessToken,
+  refreshToken: data.refreshTokenValue,
+  user: data.user,
+});
+
+     navigate("/", {
+replace: true,
+});
+    } else {
+      if (!formData.name.trim()) {
+  alert("Name is required");
+  return;
+}
+
+if (!formData.email.trim()) {
+  alert("Email is required");
+  return;
+}
+
+if (!formData.password.trim()) {
+  alert("Password is required");
+  return;
+}
+
+if (formData.password.length < 6) {
+  alert("Password should be at least 6 characters");
+  return;
+}
+      if (formData.password !== formData.confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+
+      const data = await authService.signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+     login({
+  accessToken: data.accessToken,
+  refreshToken: data.refreshTokenValue,
+  user: data.user,
+});
+
+      navigate("/", {
+        replace: true,
+      });
+    }
+  } catch (err) {
+    alert(
+      err.response?.data?.message || "Something went wrong"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#050816] text-white flex">
@@ -99,7 +207,18 @@ const [showPassword, setShowPassword] = useState(false);
 
   {/* Login Button */}
   <button
-    onClick={() => setIsLogin(true)}
+    onClick={() => {
+
+setIsLogin(true);
+
+setFormData({
+name:"",
+email:"",
+password:"",
+confirmPassword:"",
+});
+
+}}
     className={`
       relative z-10 w-1/2 py-3 text-lg font-medium
       transition-all duration-300
@@ -111,7 +230,18 @@ const [showPassword, setShowPassword] = useState(false);
 
   {/* Signup Button */}
   <button
-    onClick={() => setIsLogin(false)}
+    onClick={() => {
+
+setIsLogin(false);
+
+setFormData({
+name:"",
+email:"",
+password:"",
+confirmPassword:"",
+});
+
+}}
     className={`
       relative z-10 w-1/2 py-3 text-lg font-medium
       transition-all duration-300
@@ -123,7 +253,7 @@ const [showPassword, setShowPassword] = useState(false);
 
 </div>
           {/* Animated Form */}
-          <form
+          <form onSubmit={handleSubmit}
             key={isLogin ? "login" : "signup"}
             className="
 mt-8
@@ -151,7 +281,10 @@ focus-within:border-heritage-gold
 focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
 ">
                   <User size={20} />
-                  <input
+                  <input 
+                   name="name"
+value={formData.name}
+onChange={handleChange}
                     type="text"
                     placeholder="Your full name"
                     className="bg-transparent outline-none w-full"
@@ -169,7 +302,10 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
 
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
                 <Mail size={20} />
-                <input
+                <input 
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   type="email"
                   placeholder="you@example.com"
                   className="bg-transparent outline-none w-full"
@@ -186,21 +322,37 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
   <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-4">
     <Lock size={20} />
 
-    <input
+    <input 
+      name="password"
+      value={formData.password}
+      onChange={handleChange}
       type={showPassword ? "text" : "password"}
       placeholder="At least 6 characters"
       className="bg-transparent outline-none w-full"
     />
 
-    <Eye
-      size={18}
-      onClick={() => setShowPassword(!showPassword)}
-      className="cursor-pointer"
-    />
+   {
+showPassword ?
+
+<EyeOff
+size={18}
+onClick={() => setShowPassword(false)}
+className="cursor-pointer"
+/>
+
+:
+
+<Eye
+size={18}
+onClick={() => setShowPassword(true)}
+className="cursor-pointer"
+/>
+
+}
   </div>
   {isLogin && (
   <div className="text-right mb-5 mt-2">
-    <button className="text-heritage-gold hover:underline">
+    <button type="button" className="text-heritage-gold hover:underline">
       Forgot Password?
     </button>
   </div>
@@ -217,32 +369,66 @@ focus-within:shadow-[0_0_20px_rgba(212,175,55,0.15)]
       <Lock size={20} />
 
       <input
+        name="confirmPassword"
+        value={formData.confirmPassword}
+        onChange={handleChange}
         type={showPassword ? "text" : "password"}
         placeholder="Confirm password"
         className="bg-transparent outline-none w-full"
       />
 
-      <Eye
-        size={18}
-        onClick={() => setShowPassword(!showPassword)}
-        className="cursor-pointer"
-      />
+      {
+showPassword ?
+
+<EyeOff
+size={18}
+onClick={() => setShowPassword(false)}
+className="cursor-pointer"
+/>
+
+:
+
+<Eye
+size={18}
+onClick={() => setShowPassword(true)}
+className="cursor-pointer"
+/>
+
+}
     </div>
   </div>
 )}
 
-            <button
-              className="
-                w-full py-4 rounded-2xl
-                bg-heritage-gold
-                text-black font-semibold text-lg
-                hover:bg-heritage-light-gold
-                hover:scale-[1.02]
-                transition-all duration-300
-              "
-            >
-              {isLogin ? "Login" : "Create Account"}
-            </button>
+             <button
+  type="submit"
+  disabled={loading}
+  className={`
+    w-full
+    py-4
+    rounded-2xl
+    font-semibold
+    text-lg
+    transition-all
+    duration-300
+
+    ${
+      loading
+        ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+        : "bg-heritage-gold text-black hover:bg-heritage-light-gold hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+    }
+  `}
+>
+  {loading ? (
+    <span className="flex items-center justify-center gap-2">
+      <Loader2 className="h-5 w-5 animate-spin" />
+      Please Wait...
+    </span>
+  ) : isLogin ? (
+    "Login"
+  ) : (
+    "Create Account"
+  )}
+</button>
           </form>
         </div>
       </div>

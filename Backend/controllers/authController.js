@@ -84,11 +84,11 @@ const refreshTokenValue = generateRefreshToken({
             message: "Account created successfully",
 
             accessToken,
-    refreshTokenValue,
+            refreshToken : refreshTokenValue,
 
             user: {
 
-                id: result.insertId,
+               user_id: result.insertId,
 
                 name,
 
@@ -197,11 +197,11 @@ const refreshTokenValue = generateRefreshToken({
             message: "Login successful",
 
             accessToken,
-            refreshTokenValue,
+            refreshToken : refreshTokenValue,
 
             user: {
 
-                id: user.user_id,
+                user_id: user.user_id,
 
                 name: user.name,
 
@@ -231,6 +231,36 @@ const refreshTokenValue = generateRefreshToken({
 
 };
 
+// ==========================================
+// Logout
+// ==========================================
+const logout = async (req, res) => {
+
+    try {
+
+        res.status(200).json({
+
+            success: true,
+
+            message: "Logout successful"
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};
 
 
 const refreshToken = async (req, res) => {
@@ -251,7 +281,7 @@ const refreshToken = async (req, res) => {
         );
 
         const newAccessToken = generateAccessToken({
-            id: decoded.id,
+            user_id: decoded.user_id,
             role: decoded.role
         });
 
@@ -275,8 +305,8 @@ const refreshToken = async (req, res) => {
 module.exports = {
 
     signup,
-
     login,
+    logout,
     refreshToken
 
 };

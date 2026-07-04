@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 import {
@@ -42,6 +42,9 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 const [showNotifications, setShowNotifications] = useState(false);
 const notificationRef = useRef(null);
+const navigate = useNavigate();
+
+const [user, setUser] = useState(null);
 useEffect(() => {
   const handleClickOutside = (event) => {
     if (
@@ -64,6 +67,29 @@ useEffect(() => {
     );
   };
 }, []);
+
+useEffect(() => {
+
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
+
+}, []);
+const handleLogout = () => {
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+
+  setUser(null);
+   setIsOpen(false);
+  setShowNotifications(false);
+
+  navigate("/");
+
+};
   return (
     <nav className="fixed top-0 left-0 z-50 w-full bg-heritage-dark/40 backdrop-blur-xl border-b border-heritage-gold/10">
       <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
@@ -109,7 +135,7 @@ useEffect(() => {
           </Link>
 
           <Link
-            to="/favorites"
+            to={user ? "/favorites" : "/auth"}
             className="flex items-center gap-2 text-gray-300 hover:text-heritage-gold transition-all duration-300 hover:-translate-y-1"
           >
             <Heart size={18} />
@@ -124,6 +150,7 @@ useEffect(() => {
 >
           
           {/* Desktop notification */}
+  {user && (        
            <button
   onClick={() =>
     setShowNotifications(!showNotifications)
@@ -164,7 +191,8 @@ useEffect(() => {
     "
   />
 </button>
-{showNotifications && (
+)}
+{user && showNotifications && (
   <div
     className="
     absolute
@@ -249,26 +277,92 @@ useEffect(() => {
 
 
           {/* Desktop Profile */}
-          <Link to="/profile"><button
-           className="hidden md:flex h-10 w-10 rounded-full bg-white/5 border border-white/10
+      {user && (
+
+<Link to="/profile">
+
+<button
+className="hidden md:flex h-10 w-10 rounded-full bg-white/5 border border-white/10
 items-center justify-center text-white
 hover:text-heritage-gold hover:scale-120 transition-all duration-300"
-          >
-            <User size={20} />
-          </button>
+>
+
+{user.profile_image ? (
+
+<img
+src={user.profile_image}
+alt="profile"
+className="h-10 w-10 rounded-full object-cover"
+/>
+
+) : (
+
+<User size={20}/>
+
+)}
+
+</button>
+
 </Link>
-          
+
+)}
           {/* Desktop Login */}
-          <Link to="/auth">
-          <button
-            className="hidden md:block px-6 py-2 rounded-xl bg-heritage-gold text-black font-semibold
+         {!user && (
+
+<Link to="/auth">
+
+<button
+className="hidden md:block px-6 py-2 rounded-xl bg-heritage-gold text-black font-semibold
 hover:bg-heritage-light-gold hover:scale-110
 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]
 transition-all duration-300"
-          >
-            Login
-          </button>
-          </Link>
+>
+
+Login
+
+</button>
+
+</Link>
+
+)}
+
+{/* admin dashboard */}
+{user?.role === "admin" && (
+
+<Link
+
+to="/admin"
+
+onClick={() => setIsOpen(false)}
+
+className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
+
+>
+
+Dashboard
+
+</Link>
+
+)}
+
+{/* logout */}
+{user && (
+
+<button
+
+onClick={handleLogout}
+
+className="hidden md:block px-6 py-2 rounded-xl border border-red-500
+text-red-400 hover:bg-red-500 hover:text-white
+transition-all duration-300"
+
+>
+
+Logout
+
+</button>
+
+)}
 
           {/* Mobile Menu Button */}
           <button
@@ -326,7 +420,7 @@ transition-all duration-300"
           </Link>
 
           <Link
-            to="/favorites"
+            to={user ? "/favorites" : "/auth"}
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold transition-colors"
           >
@@ -339,15 +433,79 @@ transition-all duration-300"
           {/* Mobile Actions */}
          
            
-          <Link to="/profile" className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold">
-            <User size={20} />
-            Profile
-          </Link>
-          <Link to="/auth">
-          <button className="mt-2 px-4 py-2 rounded-xl bg-heritage-gold text-black font-semibold hover:bg-heritage-light-gold transition-all duration-300">
-  Login
-</button>
+         {user && (
+
+<Link
+to="/profile"
+onClick={() => setIsOpen(false)}
+className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
+>
+
+<User size={20}/>
+
+Profile
+
 </Link>
+
+)}
+          {!user && (
+
+<Link to="/auth" onClick={() => setIsOpen(false)}>
+
+<button
+className="mt-2 px-4 py-2 rounded-xl bg-heritage-gold text-black font-semibold hover:bg-heritage-light-gold transition-all duration-300"
+>
+
+Login
+
+</button>
+
+</Link>
+
+)}
+
+{/* admin dashboard */}
+{user?.role === "admin" && (
+
+<Link
+
+to="/admin"
+
+onClick={() => setIsOpen(false)}
+
+className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
+
+>
+
+Dashboard
+
+</Link>
+
+)}
+
+{user && (
+
+<button
+
+onClick={() => {
+
+handleLogout();
+
+setIsOpen(false);
+
+}}
+
+className="mt-2 px-4 py-2 rounded-xl border border-red-500
+text-red-400 hover:bg-red-500 hover:text-white
+transition-all duration-300"
+
+>
+
+Logout
+
+</button>
+
+)}
 
         </div>
       </div>
