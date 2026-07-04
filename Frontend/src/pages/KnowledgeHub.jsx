@@ -1,140 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search ,ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import storyService from "../services/storyService";
+import categoryService from "../services/categoryService";
 
-const categories = [
-  {
-    id: 1,
-    name: "Mythology",
-    stories: [
-      {
-        id: 101,
-        title: "Ramayana",
-        description:
-          "The journey of Lord Rama and the victory of good over evil.",
-        image: "/stories/ramayana.png",
-        coverColor: "#5A2E2A",
-      },
-      {
-        id: 102,
-        title: "Mahabharata",
-        description:
-          "The great epic describing the Kurukshetra war.",
-        image: "/stories/mahabharata.png",
-        coverColor: "#243447",
-      },
-      {
-        id: 103,
-        title: "Krishna",
-        description:
-          "Life and teachings of Lord Krishna.",
-        image: "/stories/krishna.png",
-        coverColor: "#1F4D43",
-      },
-    ],
-  },
-
-  {
-    id: 2,
-    name: "History",
-    stories: [
-      {
-        id: 201,
-        title: "Ashoka",
-        description:
-          "The emperor who embraced Buddhism.",
-        image: "/stories/ashoka.png",
-        coverColor: "#5B4028",
-      },
-      {
-        id: 202,
-        title: "Shivaji",
-        description:
-          "Founder of the Maratha Empire.",
-        image: "/stories/shivaji.png",
-        coverColor: "#0F3F44",
-      },
-      {
-        id: 203,
-        title: "Akbar",
-        description:
-          "One of the greatest Mughal emperors.",
-        image: "/stories/akbar.png",
-        coverColor: "#43305D",
-      },
-    ],
-  },
-
-  {
-    id: 3,
-    name: "Culture",
-    stories: [
-      {
-        id: 301,
-        title: "Yoga",
-        description:
-          "India's ancient gift to the world.",
-        image: "/stories/yoga.png",
-        coverColor: "#1E375B",
-      },
-      {
-        id: 302,
-        title: "Kathak",
-        description:
-          "Classical dance form of North India.",
-        image: "/stories/kathak.png",
-        coverColor: "#5A263E",
-      },
-      {
-        id: 303,
-        title: "Bharatanatyam",
-        description:
-          "Ancient dance tradition of Tamil Nadu.",
-        image: "/stories/bharatanatyam.png",
-        coverColor: "#22483D",
-      },
-    ],
-  },
-
-  {
-    id: 4,
-    name: "Freedom",
-    stories: [
-      {
-        id: 401,
-        title: "Bhagat Singh",
-        description:
-          "One of India's greatest freedom fighters.",
-        image: "/stories/bhagatsingh.png",
-        coverColor: "#5D3422",
-      },
-      {
-        id: 402,
-        title: "Subhash Bose",
-        description:
-          "Leader of the Indian National Army.",
-        image: "/stories/bose.png",
-        coverColor: "#23374B",
-      },
-      {
-        id: 403,
-        title: "Rani Lakshmi Bai",
-        description:
-          "The Queen of Jhansi.",
-        image: "/stories/rani.png",
-        coverColor: "#54253A",
-      },
-    ],
-  },
+const coverColors = [
+  "bg-gradient-to-br from-red-500 to-red-800",
+  "bg-gradient-to-br from-blue-500 to-blue-800",
+  "bg-gradient-to-br from-green-500 to-green-800",
+  "bg-gradient-to-br from-purple-500 to-purple-800",
+  "bg-gradient-to-br from-amber-500 to-orange-800",
+  "bg-gradient-to-br from-pink-500 to-rose-800",
+  "bg-gradient-to-br from-cyan-500 to-blue-800",
+  "bg-gradient-to-br from-indigo-500 to-violet-800",
+  "bg-gradient-to-br from-emerald-500 to-green-800",
+  "bg-gradient-to-br from-orange-500 to-red-800",
 ];
+
 const KnowledgeHub = () => {
 
-  const allStories = categories.flatMap((category) =>
-  category.stories.map((story) => ({
-    ...story,
-    category: category.name,
-  }))
-);
+  const [stories, setStories] = useState([]);
+
+const [categories, setCategories] = useState([]);
+
+const [selectedCategory, setSelectedCategory] = useState("");
+
+const [search, setSearch] = useState("");
+
+const [loading, setLoading] = useState(false);
+
+const [page, setPage] = useState(1);
+
+const [pagination, setPagination] = useState({});
+
+
+
+useEffect(() => {
+  fetchCategories();
+}, []);
+
+useEffect(() => {
+  fetchStories();
+}, [page, selectedCategory, search]);
+
+
+const fetchCategories = async () => {
+  try {
+    const data = await categoryService.getCategories({
+      usage_type: "STORY",
+    });
+
+    setCategories(data.categories);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const fetchStories = async () => {
+  try {
+    setLoading(true);
+
+    const data = await storyService.getStories({
+      page,
+      search,
+      category: selectedCategory,
+      limit: 12,
+    });
+
+    const storiesWithColor = data.stories.map((story, index) => ({
+  ...story,
+  coverColor: coverColors[index % coverColors.length],
+}));
+
+setStories(storiesWithColor);
+
+    setPagination(data.pagination);
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoading(false);
+  }
+};
+ 
 
   return (
     <div className="min-h-screen text-white pt-10 px-4 md:px-8">
@@ -186,65 +133,99 @@ const KnowledgeHub = () => {
             className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"
           />
 
-          <input
-            type="text"
-            placeholder="Search stories..."
-            className="
-            w-full
-            py-4
-            pl-14
-            pr-5
-            rounded-2xl
-            bg-white/5
-            backdrop-blur-xl
-            border
-            border-white/10
-            outline-none
-            focus:border-heritage-gold
-            transition-all
-            "
-          />
+         <input
+type="text"
+value={search}
+onChange={(e)=>{
+
+setSearch(e.target.value);
+
+setPage(1);
+
+}}
+placeholder="Search stories..."
+className="
+w-full
+py-4
+pl-14
+pr-5
+rounded-2xl
+bg-white/5
+backdrop-blur-xl
+border
+border-white/10
+outline-none
+focus:border-heritage-gold
+transition-all
+"
+/>
         </div>
 
         {/* Categories */}
 
         <div className="flex flex-wrap gap-3 mt-6">
-            <button
-  className="
-  px-4
-  py-2
-  rounded-full
-  bg-heritage-gold
-  text-black
-  font-medium
-  shadow-[0_0_20px_rgba(212,175,55,0.4)]
-  hover:scale-102
-  transition-all
-  duration-300
-  "
+          
+
+        <button
+onClick={()=>{
+setSelectedCategory("");
+setPage(1);
+}}
+className={`
+px-4
+py-2
+rounded-full
+transition-all
+
+${
+selectedCategory===""
+
+? "bg-heritage-gold text-black"
+
+: "bg-white/5 border border-white/10 hover:border-heritage-gold hover:text-heritage-gold"
+
+}
+`}
 >
-  All
+All
 </button>
 
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              className="
-              px-4
-              py-2
-              rounded-full
-              bg-white/5
-              border
-              border-white/10
-              hover:border-heritage-gold
-              hover:text-heritage-gold
-              transition-all
-              duration-300
-              "
-            >
-              {cat.name}
-            </button>
-          ))}
+{categories.map((cat)=>(
+
+<button
+
+key={cat.category_id}
+
+onClick={()=>{
+
+setSelectedCategory(cat.category_name);
+
+setPage(1);
+
+}}
+
+className={`
+px-4
+py-2
+rounded-full
+transition-all
+
+${
+selectedCategory===cat.category_name
+
+? "bg-heritage-gold text-black"
+
+: "bg-white/5 border border-white/10 hover:border-heritage-gold hover:text-heritage-gold"
+
+}
+`}
+>
+
+{cat.category_name}
+
+</button>
+
+))}
 
         </div>
       </div>
@@ -256,11 +237,11 @@ const KnowledgeHub = () => {
 
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-14 gap-y-16">
 
-    {allStories.map((story) => (
+    {stories.map((story,index)=>(
 
       <Link
         key={story.id}
-        to={`/stories/${story.id}`}
+        to={`/stories/${story.story_id}`}
         className="group flex justify-center"
       >
 
@@ -302,18 +283,25 @@ group-hover:rotate-1
   {/* Spine */}
 
   <div
-    className="absolute left-0 top-0 w-6 h-full rounded-l-md"
-    style={{
-      background: `linear-gradient(to right,#2b1b13,${story.coverColor})`,
-    }}
-  >
+className="
+absolute
+left-0
+top-0
+w-6
+h-full
+rounded-l-md
+bg-linear-to-r
+from-[#2b1b13]
+to-[#6b4423]
+"
+>
     <div className="absolute right-0 top-0 h-full w-0.5 bg-yellow-700/40"></div>
   </div>
 
   {/* Cover */}
 
 <div
- className="
+className={`
 absolute
 left-4
 top-0
@@ -327,13 +315,15 @@ duration-700
 ease-out
 group-hover:transform-[rotateY(-18deg)]
 group-hover:shadow-[0_30px_60px_rgba(212,175,55,0.45)]
-"
-  style={{
-    background: story.coverColor,
-    borderColor: "#b88935",
-    boxShadow:
-      "12px 12px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,215,120,.15)",
-  }}
+flex
+flex-col
+${story.coverColor}
+`}
+style={{
+borderColor:"#b88935",
+boxShadow:
+"12px 12px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,215,120,.15)"
+}}
 >
      
     <div
@@ -377,10 +367,10 @@ group-hover:shadow-[0_0_22px_rgba(255,215,0,0.7)]
 
     {/* Image */}
 
-    <div className="flex justify-center mt-10">
+    <div className="flex justify-center pt-10">
 
       <div
-        className="w-36 h-36 rounded-full overflow-hidden border-[3px]
+        className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-[3px]
         border-yellow-700 shadow-xl"
       >
         <img
@@ -405,7 +395,7 @@ group-hover:brightness-110
 
     {/* Category */}
 
-    <div className="flex justify-center mt-3">
+    <div className="flex justify-center mt-4">
 
       <span
        className="
@@ -424,51 +414,64 @@ group-hover:bg-yellow-500
 group-hover:text-black
 "
       >
-        {story.category}
+        {story.category_name}
       </span>
 
     </div>
 
     {/* Title */}
 
-<h2
-  className="
-    mt-6
-    px-5
+<div className="px-5 mt-6 min-h-18.75 flex items-center justify-center">
+  <h2
+    className="
     text-center
     font-bold
     text-yellow-100
     leading-tight
-    wrap-break-words
     line-clamp-2
     transition-all
-duration-500
-group-hover:text-yellow-50
-  "
-  style={{
-    fontFamily: "Cormorant Garamond, serif",
-    fontSize: story.title.length > 11 ? "1.7rem" : "2rem",
-  }}
->
-  {story.title}
-</h2>
+    duration-500
+    group-hover:text-yellow-50
+    "
+    style={{
+      fontFamily: "Cormorant Garamond, serif",
+      fontSize:
+        story.title.length > 22
+          ? "1.55rem"
+          : story.title.length > 12
+          ? "1.75rem"
+          : "2rem",
+    }}
+  >
+    {story.title}
+  </h2>
+</div>
 
     {/* Description */}
 
-    <p
-      className="px-7 mt-4 text-center text-gray-300
-group-hover:text-white
-transition-colors
-duration-500
-      text-[17px] leading-7 line-clamp-3"
-      style={{ fontFamily: "Cormorant Garamond, serif" }}
-    >
-      {story.description}
-    </p>
+  <div className="px-7 flex-1">
+  <p
+    className="
+    text-center
+    text-gray-300
+    group-hover:text-white
+    transition-colors
+    duration-500
+    text-[17px]
+    leading-7
+    line-clamp-3
+    "
+    style={{
+      fontFamily: "Cormorant Garamond, serif",
+    }}
+  >
+    {story.summary}
+  </p>
+</div>
 
     {/* Ornament */}
 
-    <div className="flex justify-center mt-6">
+    <div className="flex justify-center mt-auto mb-6">
 
       <div className="w-12 h-0.5 bg-yellow-700"></div>
 

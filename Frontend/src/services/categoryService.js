@@ -1,11 +1,8 @@
 import api from "../api/api";
 
-const getCategories = async () => {
+const getCategories = async (params = {}) => {
   const response = await api.get("/categories", {
-    params: {
-      usage_type: "PLACE",
-      limit: 20,
-    },
+    params,
   });
 
   return response.data;

@@ -79,7 +79,10 @@ useEffect(() => {
 
 const fetchCategories = async () => {
   try {
-    const data = await categoryService.getCategories();
+    
+    const data = await categoryService.getCategories({
+  usage_type: "PLACE",
+});
 
     setCategories(data.categories);
   } catch (err) {
