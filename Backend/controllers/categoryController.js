@@ -53,15 +53,19 @@ const getAllCategories = async (req, res) => {
         }
 
         // Usage Type
+       if (usage_type) {
 
-        if (usage_type) {
+    if (usage_type === "STORY") {
+        query += " AND usage_type IN ('STORY','BOTH')";
+        countQuery += " AND usage_type IN ('STORY','BOTH')";
+    }
 
-            query += " AND usage_type = ?";
-            countQuery += " AND usage_type = ?";
+    else if (usage_type === "PLACE") {
+        query += " AND usage_type IN ('PLACE','BOTH')";
+        countQuery += " AND usage_type IN ('PLACE','BOTH')";
+    }
 
-            values.push(usage_type);
-
-        }
+}
 
         // Sorting
 

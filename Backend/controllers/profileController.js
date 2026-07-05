@@ -4,9 +4,7 @@ const db = require("../config/db");
 // Get Logged In User Profile
 // ==========================================
 const getProfile = async (req, res) => {
-
   try {
-
     const userId = req.user.id;
 
     const [user] = await db.query(
@@ -30,17 +28,48 @@ const getProfile = async (req, res) => {
     );
 
     if (user.length === 0) {
-
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
-
     }
+
+    // ======================
+    // Collection Stats
+    // ======================
+
+    const [stats] = await db.query(
+      `
+      SELECT
+
+      COUNT(*) AS totalCollection,
+
+      SUM(item_type='PLACE') AS savedPlaces,
+
+      SUM(item_type='STORY') AS savedStories
+
+      FROM saved_items
+
+      WHERE user_id = ?
+      `,
+      [userId]
+    );
 
     res.status(200).json({
       success: true,
-      user: user[0]
+
+      user: user[0],
+
+      stats: {
+        totalCollection:
+          Number(stats[0].totalCollection) || 0,
+
+        savedPlaces:
+          Number(stats[0].savedPlaces) || 0,
+
+        savedStories:
+          Number(stats[0].savedStories) || 0,
+      },
     });
 
   } catch (error) {
@@ -49,12 +78,11 @@ const getProfile = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
 
   }
 };
-
 
 // ==========================================
 // Update Profile

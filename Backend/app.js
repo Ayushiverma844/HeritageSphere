@@ -6,7 +6,7 @@ const db = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-const savedPlaceRoutes = require("./routes/savedPlaceRoutes");
+const collectionRotes = require("./routes/collectionRoutes")
 const placeRoutes = require("./routes/placeRoutes");
 const storyRoutes = require("./routes/storyRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/saved-places", savedPlaceRoutes);
+app.use("/api/collection",collectionRotes);
 app.use("/api/places", placeRoutes);
 app.use("/api/stories", storyRoutes);
 app.use("/api/reviews", reviewRoutes);
