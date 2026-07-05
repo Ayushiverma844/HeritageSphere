@@ -6,7 +6,7 @@ import Auth from "./pages/Auth";
 import Explore from "./pages/Explore";
 import Profile from "./pages/Profile";
 import PlaceDetails from "./pages/PlaceDetails";
-import Favorites from "./pages/MyFavorites";
+import Collection from "./pages/MyCollection";
 import KnowledgeHub from "./pages/KnowledgeHub";
 import Story from "./pages/Story";
 import Admin from "./pages/AdminDashboard";
@@ -67,7 +67,7 @@ const App = () => {
 
   <Route path="/stories/:id" element={<Story />} />
 
-  <Route path="/favorites" element={<Favorites />} />
+  <Route path="/my-collection" element={<Collection />} />
 
   <Route path="/profile" element={<Profile />} />
 

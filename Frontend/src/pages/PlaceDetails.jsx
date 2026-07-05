@@ -305,8 +305,8 @@ const PlaceDetails = () => {
                     gap-2
                   "
                 >
-                  <Heart size={18} />
-                  Save to Favorites
+                  <Bookmark size={18} />
+                  Save to Collection
                 </button>
 
                 <button

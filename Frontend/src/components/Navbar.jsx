@@ -12,6 +12,7 @@ import {
   Heart,
   Menu,
   X,
+  Bookmark,
 } from "lucide-react";
 
 const notifications = [
@@ -135,11 +136,11 @@ const handleLogout = () => {
           </Link>
 
           <Link
-            to={user ? "/favorites" : "/auth"}
+            to={user ? "/my-collection" : "/auth"}
             className="flex items-center gap-2 text-gray-300 hover:text-heritage-gold transition-all duration-300 hover:-translate-y-1"
           >
-            <Heart size={18} />
-            Favorites
+            <Bookmark size={18} />
+            My Collection
           </Link>
         </div>
 
@@ -420,12 +421,12 @@ Logout
           </Link>
 
           <Link
-            to={user ? "/favorites" : "/auth"}
+            to={user ? "/my-collection" : "/auth"}
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold transition-colors"
           >
-            <Heart size={20} />
-            Favorites
+            <Bookmark size={20} />
+            My Collection
           </Link>
 
           <hr className="border-heritage-gold/20" />

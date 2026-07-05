@@ -127,7 +127,7 @@ const Profile = () => {
           </h2>
 
           <p className="text-gray-300 mt-1">
-            Favorites
+            Collection
           </p>
         </div>
 
