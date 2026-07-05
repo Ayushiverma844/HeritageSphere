@@ -1,6 +1,14 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const ChapterNavigation = () => {
+const ChapterNavigation = ({
+  chapters = [],
+  currentChapter,
+  setCurrentChapter,
+}) => {
+
+  const isFirst = currentChapter === 0;
+  const isLast = currentChapter === chapters.length - 1;
+
   return (
     <div
       className="
@@ -13,29 +21,47 @@ const ChapterNavigation = () => {
       mt-8
       "
     >
-     {/* Previous */}
 
-<button
-  className="
-  flex
-  items-center
-  gap-2
-  px-6
-  py-3
-  rounded-xl
-  bg-amber-200
-  text-[#2c1e0f]
-  font-semibold
-  hover:scale-105
-  transition-all
-  duration-300
-  "
->
-  <ChevronLeft size={18} />
-  Previous Chapter
-</button>
+      {/* Previous */}
 
- {/* Chapter Indicator */}
+      <button
+        onClick={() => {
+          if (!isFirst) {
+            setCurrentChapter(currentChapter - 1);
+          }
+        }}
+        disabled={isFirst}
+        className={`
+          flex
+          items-center
+          gap-2
+          px-6
+          py-3
+          rounded-xl
+          font-semibold
+          transition-all
+          duration-300
+
+          ${
+            isFirst
+              ? `
+                bg-gray-500/30
+                text-gray-500
+                cursor-not-allowed
+              `
+              : `
+                bg-amber-200
+                text-[#2c1e0f]
+                hover:scale-105
+              `
+          }
+        `}
+      >
+        <ChevronLeft size={18} />
+        Previous Chapter
+      </button>
+
+      {/* Chapter Indicator */}
 
       <div
         className="
@@ -49,35 +75,49 @@ const ChapterNavigation = () => {
         text-gray-300
         "
       >
-        Chapter 1 of 6
+        Chapter {currentChapter + 1} of {chapters.length}
       </div>
 
+      {/* Next */}
 
-{/* Next */}
+      <button
+        onClick={() => {
+          if (!isLast) {
+            setCurrentChapter(currentChapter + 1);
+          }
+        }}
+        disabled={isLast}
+        className={`
+          flex
+          items-center
+          gap-2
+          px-6
+          py-3
+          rounded-xl
+          font-semibold
+          transition-all
+          duration-300
 
-<button
-  className="
-  flex
-  items-center
-  gap-2
-  px-6
-  py-3
-  rounded-xl
-  bg-heritage-gold
-  text-black
-  font-semibold
-  hover:scale-105
-  hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]
-  transition-all
-  duration-300
-  "
->
-  Next Chapter
-  <ChevronRight size={18} />
-</button>
+          ${
+            isLast
+              ? `
+                bg-gray-500/30
+                text-gray-500
+                cursor-not-allowed
+              `
+              : `
+                bg-heritage-gold
+                text-black
+                hover:scale-105
+                hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]
+              `
+          }
+        `}
+      >
+        Next Chapter
+        <ChevronRight size={18} />
+      </button>
 
-     
-     
     </div>
   );
 };

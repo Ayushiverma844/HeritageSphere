@@ -1,10 +1,64 @@
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, BookOpen } from "lucide-react";
+
 import StorySidebar from "../components/story/StorySidebar";
 import StoryBook from "../components/story/StoryBook";
 import ChapterNavigation from "../components/story/ChapterNavigation";
-import { ArrowLeft, BookOpen } from "lucide-react";
-import { Link } from "react-router-dom";
+
+import storyService from "../services/storyService";
 
 const Story = () => {
+  const { slug } = useParams();
+
+  const [story, setStory] = useState(null);
+  const [chapters, setChapters] = useState([]);
+  const [currentChapter, setCurrentChapter] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}, [currentChapter]);
+  useEffect(() => {
+    fetchStory();
+  }, [slug]);
+
+  const fetchStory = async () => {
+    try {
+      setLoading(true);
+
+      const data = await storyService.getStoryDetails(slug);
+
+      setStory(data.story);
+      setChapters(data.chapters || []);
+      setCurrentChapter(0);
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-400">
+        Loading story...
+      </div>
+    );
+  }
+
+  if (!story) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-400">
+        Story not found.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pt-10 px-4 md:px-6 overflow-hidden">
 
@@ -35,7 +89,7 @@ const Story = () => {
           Back to Knowledge Hub
         </Link>
 
-        {/* Page Header */}
+        {/* Header */}
 
         <div className="text-center mt-10 mb-12">
 
@@ -66,21 +120,18 @@ const Story = () => {
             text-white
             "
           >
-            Ramayana
+            {story.title}
           </h1>
 
           <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
-            Journey through one of the greatest epics of
-            ancient India and discover the timeless lessons
-            of duty, devotion and righteousness.
+            {story.summary}
           </p>
+
         </div>
 
         {/* Main Content */}
 
         <div className="relative">
-
-          {/* Background Glow */}
 
           <div
             className="
@@ -105,20 +156,38 @@ const Story = () => {
             gap-8
             "
           >
+
             {/* Sidebar */}
 
-            <StorySidebar />
+            <StorySidebar
+              chapters={chapters}
+              currentChapter={currentChapter}
+              setCurrentChapter={setCurrentChapter}
+            />
 
-            {/* Book Area */}
+            {/* Book */}
 
             <div>
-              <StoryBook />
-              <ChapterNavigation />
+
+              <StoryBook
+                story={story}
+                chapter={chapters[currentChapter]}
+              />
+
+              <ChapterNavigation
+                chapters={chapters}
+                currentChapter={currentChapter}
+                setCurrentChapter={setCurrentChapter}
+              />
+
             </div>
+
           </div>
+
         </div>
 
       </div>
+
     </div>
   );
 };

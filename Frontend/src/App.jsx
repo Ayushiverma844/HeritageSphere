@@ -65,7 +65,7 @@ const App = () => {
 
   <Route path="/knowledge-hub" element={<KnowledgeHub />} />
 
-  <Route path="/stories/:id" element={<Story />} />
+  <Route path="/stories/:slug" element={<Story />} />
 
   <Route path="/my-collection" element={<Collection />} />
 

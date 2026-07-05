@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // ==========================
-// Get All Stories (FINAL)
+// Get All Stories
 // ==========================
 const getAllStories = async (req, res) => {
   try {
@@ -62,7 +62,7 @@ const getAllStories = async (req, res) => {
     }
 
     // ======================
-    // Count Query
+    // Count
     // ======================
 
     const [countResult] = await db.query(
@@ -80,12 +80,14 @@ const getAllStories = async (req, res) => {
 
     if (sort === "oldest") {
       orderBy = "ORDER BY s.created_at ASC";
-    } else if (sort === "title") {
+    }
+
+    if (sort === "title") {
       orderBy = "ORDER BY s.title ASC";
     }
 
     // ======================
-    // Main Query
+    // Stories
     // ======================
 
     const [stories] = await db.query(
@@ -101,7 +103,7 @@ const getAllStories = async (req, res) => {
         s.source_name,
         s.source_url,
         s.created_at,
-          s.source_name,
+        s.source_name,
 
         c.category_id,
         c.category_name,
@@ -109,14 +111,17 @@ const getAllStories = async (req, res) => {
         p.name AS place_name
 
       ${baseQuery}
+
       ${orderBy}
+
       LIMIT ? OFFSET ?
       `,
       [...values, limit, offset]
     );
 
-    res.json({
+    res.status(200).json({
       success: true,
+
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalStories / limit),
@@ -125,24 +130,34 @@ const getAllStories = async (req, res) => {
         hasNextPage: page < Math.ceil(totalStories / limit),
         hasPreviousPage: page > 1,
       },
+
       stories,
     });
+
   } catch (error) {
+
     console.log(error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
+
   }
 };
 
 // ==========================
-// Get Story Details (FINAL)
+// Get Story Details
 // ==========================
 const getStoryDetails = async (req, res) => {
+
   try {
-    const slug = req.params.slug;
+
+    const { slug } = req.params;
+
+    // ======================
+    // Story
+    // ======================
 
     const [story] = await db.query(
       `
@@ -187,18 +202,48 @@ const getStoryDetails = async (req, res) => {
       });
     }
 
-    res.json({
+    // ======================
+    // Chapters
+    // ======================
+
+    const [chapters] = await db.query(
+      `
+      SELECT
+        chapter_id,
+        story_id,
+        chapter_number,
+        title,
+        content,
+        image_url,
+        quote
+      FROM story_chapters
+      WHERE story_id = ?
+      ORDER BY chapter_number ASC
+      `,
+      [story[0].story_id]
+    );
+
+    // ======================
+    // Response
+    // ======================
+
+    res.status(200).json({
       success: true,
       story: story[0],
+      chapters,
     });
+
   } catch (error) {
+
     console.log(error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
+
   }
+
 };
 
 module.exports = {

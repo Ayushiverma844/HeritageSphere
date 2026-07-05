@@ -1,4 +1,10 @@
-const StoryIllustration = () => {
+const StoryIllustration = ({ story, chapter }) => {
+
+  const image =
+    chapter?.image_url ||
+    story?.cover_image ||
+    "/stories/default.jpg";
+
   return (
     <div
       className="
@@ -33,8 +39,8 @@ const StoryIllustration = () => {
       {/* Illustration */}
 
       <img
-        src="/stories/ramayana.jpg"
-        alt="Ramayana Illustration"
+        src={image}
+        alt={chapter?.title || story?.title}
         className="
         w-full
         max-w-md
@@ -54,6 +60,7 @@ const StoryIllustration = () => {
       {/* Quote */}
 
       <div className="mt-8 text-center max-w-md">
+
         <p
           className="
           text-xl
@@ -62,8 +69,7 @@ const StoryIllustration = () => {
           font-serif
           "
         >
-          “Dharma protects those
-          who protect it.”
+          {chapter?.quote || "No quote available."}
         </p>
 
         <div
@@ -85,9 +91,11 @@ const StoryIllustration = () => {
           text-[#5a4632]
           "
         >
-          Ramayana
+          {story?.title}
         </p>
+
       </div>
+
     </div>
   );
 };

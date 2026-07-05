@@ -1,6 +1,9 @@
 import StoryIllustration from "./StoryIllustration";
 
-const StoryBook = () => {
+const StoryBook = ({ story, chapter }) => {
+
+  if (!story || !chapter) return null;
+
   return (
     <div className="relative">
 
@@ -50,35 +53,35 @@ const StoryBook = () => {
           border-black/10
           "
         >
+
+          {/* Story Title */}
+
           <h1 className="text-4xl md:text-5xl font-serif mb-3">
-            Ramayana
+            {story.title}
           </h1>
 
+          {/* Chapter */}
+
           <p className="text-lg mb-8 opacity-80">
-            The Epic of Lord Rama
+            Chapter {chapter.chapter_number} • {chapter.title}
           </p>
 
-          <div className="story-content text-base md:text-lg leading-8 md:leading-9">
-            <p>
-              The Ramayana, composed by the sage Valmiki,
-              is one of the greatest epics of ancient India.
-              It tells the story of Rama, the seventh avatar
-              of Vishnu, who is exiled from his kingdom for
-              fourteen years due to a conspiracy in the royal
-              court.
-            </p>
+          {/* Chapter Content */}
 
-            <br />
-
-            <p>
-              His devoted wife Sita and loyal brother
-              Lakshmana accompany him into exile. During
-              their exile, the demon king Ravana abducts
-              Sita and takes her to Lanka.
-            </p>
+          <div
+            className="
+            story-content
+            text-base
+            md:text-lg
+            leading-8
+            md:leading-9
+            whitespace-pre-line
+            "
+          >
+            {chapter.content}
           </div>
 
-          {/* Left Page Curve Shadow */}
+          {/* Left Shadow */}
 
           <div
             className="
@@ -93,9 +96,10 @@ const StoryBook = () => {
             pointer-events-none
             "
           />
+
         </div>
 
-        {/* Book Spine */}
+        {/* Spine */}
 
         <div
           className="
@@ -118,8 +122,13 @@ const StoryBook = () => {
 
         {/* Right Page */}
 
-        <StoryIllustration />
+        <StoryIllustration
+          story={story}
+          chapter={chapter}
+        />
+
       </div>
+
     </div>
   );
 };

@@ -1,15 +1,10 @@
 import { BookMarked } from "lucide-react";
 
-const chapters = [
-  "Birth of Rama",
-  "Exile",
-  "Sita Haran",
-  "Search for Sita",
-  "Battle of Lanka",
-  "Return to Ayodhya",
-];
-
-const StorySidebar = () => {
+const StorySidebar = ({
+  chapters = [],
+  currentChapter,
+  setCurrentChapter,
+}) => {
   return (
     <div
       className="
@@ -67,7 +62,7 @@ const StorySidebar = () => {
           </h3>
 
           <p className="text-xs text-gray-400">
-            6 Chapters Available
+            {chapters.length} Chapters Available
           </p>
         </div>
       </div>
@@ -79,7 +74,8 @@ const StorySidebar = () => {
         {chapters.map((chapter, index) => (
 
           <button
-            key={index}
+            key={chapter.chapter_id}
+            onClick={() => setCurrentChapter(index)}
             className={`
               group
               relative
@@ -93,7 +89,7 @@ const StorySidebar = () => {
               duration-300
 
               ${
-                index === 0
+                currentChapter === index
                   ? `
                     bg-heritage-gold
                     text-black
@@ -126,20 +122,21 @@ const StorySidebar = () => {
                 font-semibold
 
                 ${
-                  index === 0
+                  currentChapter === index
                     ? "bg-black/15"
                     : "bg-white/10"
                 }
                 `}
               >
-                {String(index + 1).padStart(2, "0")}
+                {String(chapter.chapter_number).padStart(2, "0")}
               </div>
 
               {/* Chapter Name */}
 
               <div>
+
                 <p className="font-medium">
-                  {chapter}
+                  {chapter.title}
                 </p>
 
                 <p
@@ -147,14 +144,15 @@ const StorySidebar = () => {
                   text-xs mt-1
 
                   ${
-                    index === 0
+                    currentChapter === index
                       ? "text-black/70"
                       : "text-gray-500"
                   }
                   `}
                 >
-                  Chapter {index + 1}
+                  Chapter {chapter.chapter_number}
                 </p>
+
               </div>
 
             </div>
@@ -179,6 +177,7 @@ const StorySidebar = () => {
           Ancient Indian Epic
         </p>
       </div>
+
     </div>
   );
 };
