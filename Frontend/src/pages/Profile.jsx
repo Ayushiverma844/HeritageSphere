@@ -33,6 +33,10 @@ const Profile = () => {
     savedPlaces: 0,
     savedStories: 0,
   });
+   
+  const [previewImage, setPreviewImage] = useState("");
+
+const [selectedImage, setSelectedImage] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,8 +45,19 @@ const Profile = () => {
     city: "",
     state: "",
     country: "",
+    current_password: "",
+new_password: "",
+confirm_password: "",
   });
+ const handleImage = (e) => {
+  const file = e.target.files[0];
 
+  if (!file) return;
+
+  setSelectedImage(file);
+
+  setPreviewImage(URL.createObjectURL(file));
+};
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -76,6 +91,9 @@ const Profile = () => {
         state: data.user.state || "",
 
         country: data.user.country || "",
+         current_password: "",
+  new_password: "",
+  confirm_password: "",
 
       });
 
@@ -103,27 +121,89 @@ const Profile = () => {
 
   };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
+  try {
 
-    try {
+    // ==========================
+    // Update Profile
+    // ==========================
 
-      const data = await profileService.updateProfile(
-        formData
-      );
+    const profilePayload = {
+      name: formData.name,
+      mobile_number: formData.mobile_number,
+      date_of_birth: formData.date_of_birth,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+    };
 
-      setUser(data.user);
+    await profileService.updateProfile(profilePayload);
 
-      setShowModal(false);
+    // ==========================
+    // Change Password (Optional)
+    // ==========================
 
-    } catch (err) {
+    if (
+      formData.current_password ||
+      formData.new_password ||
+      formData.confirm_password
+    ) {
 
-      console.log(err);
+      if (
+        !formData.current_password ||
+        !formData.new_password ||
+        !formData.confirm_password
+      ) {
+        return alert("Please fill all password fields.");
+      }
 
-      alert("Unable to update profile");
+      if (
+        formData.new_password !==
+        formData.confirm_password
+      ) {
+        return alert("Passwords do not match.");
+      }
+
+      await profileService.changePassword({
+        current_password: formData.current_password,
+        new_password: formData.new_password,
+        confirm_password: formData.confirm_password,
+      });
 
     }
 
-  };
+    // ==========================
+    // Refresh Profile
+    // ==========================
+
+    fetchProfile();
+
+    // Close Modal
+
+    setShowModal(false);
+
+    // Clear Password Fields
+
+    setFormData((prev) => ({
+      ...prev,
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
+    }));
+
+    alert("Profile updated successfully.");
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert(
+      err.response?.data?.message ||
+      "Something went wrong."
+    );
+
+  }
+};
 
   if (loading) {
 
@@ -511,301 +591,477 @@ const Profile = () => {
 
       {showModal && (
 
-        <div
+  <div
+    className="
+    fixed
+    inset-0
+    bg-black/70
+    backdrop-blur-md
+    flex
+    items-center
+    justify-center
+    z-50
+    p-4
+    "
+    onClick={() => setShowModal(false)}
+  >
+
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="
+      w-full
+      max-w-2xl
+      max-h-[90vh]
+      overflow-y-auto
+      scrollbar-none
+      rounded-3xl
+      border
+      border-heritage-gold/30
+      bg-[#0d1524]
+      shadow-[0_0_35px_rgba(212,175,55,0.18)]
+      p-8
+      "
+    >
+
+      {/* Heading */}
+
+      <h2
+        className="
+        text-3xl
+        font-bold
+        text-center
+        text-heritage-gold
+        mb-8
+        "
+      >
+        Edit Profile
+      </h2>
+
+      {/* ================= PROFILE IMAGE ================= */}
+
+      <div className="flex flex-col items-center mb-10">
+
+        <img
+          // src={previewImage || profileImage}
+          src = {previewImage}
+          alt="Profile"
           className="
-          fixed
-          inset-0
-          bg-black/60
-          backdrop-blur-sm
-          flex
-          items-center
-          justify-center
-          z-50
-          p-4
+          w-32
+          h-32
+          rounded-full
+          object-cover
+          border-4
+          border-heritage-gold
+          shadow-[0_0_20px_rgba(212,175,55,.3)]
           "
-          onClick={() => setShowModal(false)}
+        />
+
+        <label
+          className="
+          mt-4
+          px-5
+          py-2
+          rounded-xl
+          border
+          border-heritage-gold
+          text-heritage-gold
+          cursor-pointer
+          hover:bg-heritage-gold
+          hover:text-black
+          transition-all
+          "
         >
 
-          <div
-  onClick={(e) => e.stopPropagation()}
-  className="
-    w-full
-    max-w-xl
-    max-h-[90vh]
-    overflow-y-auto
-    bg-heritage-dark
-    border
-    border-heritage-gold/30
-    rounded-3xl
-    p-6
-    shadow-xl
-    scrollbar-none 
-    
-  "
->
-            
+          Change Photo
 
-            <h2
+          <input
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleImage}
+          />
+
+        </label>
+
+      </div>
+
+      {/* ================= PERSONAL INFO ================= */}
+
+      <h3 className="text-xl font-semibold text-heritage-gold mb-5">
+
+        Personal Information
+
+      </h3>
+
+      <div className="grid md:grid-cols-2 gap-5">
+
+        {/* Name */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            Name
+
+          </label>
+
+          <input
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+        {/* Mobile */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            Mobile Number
+
+          </label>
+
+          <input
+            name="mobile_number"
+            value={formData.mobile_number}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+        {/* DOB */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            Date Of Birth
+
+          </label>
+
+          <input
+            type="date"
+            name="date_of_birth"
+            value={formData.date_of_birth}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+        {/* City */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            City
+
+          </label>
+
+          <input
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+        {/* State */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            State
+
+          </label>
+
+          <input
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+        {/* Country */}
+
+        <div>
+
+          <label className="block mb-2">
+
+            Country
+
+          </label>
+
+          <input
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            className="
+            w-full
+            px-4
+            py-3
+            rounded-xl
+            bg-white/5
+            border
+            border-heritage-gold/20
+            outline-none
+            focus:border-heritage-gold
+            "
+          />
+
+        </div>
+
+      </div>
+
+      {/* Email */}
+
+      <div className="mt-5">
+
+        <label className="block mb-2">
+
+          Email
+
+        </label>
+
+        <input
+          value={user.email || ""}
+          readOnly
+          className="
+          w-full
+          px-4
+          py-3
+          rounded-xl
+          bg-white/10
+          border
+          border-white/10
+          text-gray-400
+          cursor-not-allowed
+          "
+        />
+
+      </div>
+
+      {/* ================= PASSWORD ================= */}
+
+      <div className="mt-10">
+
+        <h3
+          className="
+          text-xl
+          font-semibold
+          text-heritage-gold
+          mb-5
+          "
+        >
+
+          Change Password
+          <span className="text-sm text-gray-400 ml-2">
+
+            (Optional)
+
+          </span>
+
+        </h3>
+
+        <div className="space-y-5">
+
+          <div>
+
+            <label className="block mb-2">
+
+              Current Password
+
+            </label>
+
+            <input
+              type="password"
+              name="current_password"
+              value={formData.current_password}
+              onChange={handleChange}
+              placeholder="Enter current password"
               className="
-              text-2xl
-              font-bold
-              text-center
-              text-heritage-gold
-              mb-6
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              bg-white/5
+              border
+              border-heritage-gold/20
+              outline-none
+              focus:border-heritage-gold
               "
-            >
+            />
 
-              Edit Profile
+          </div>
 
-            </h2>
+          <div>
 
-            <div className="space-y-4">
+            <label className="block mb-2">
 
-              <div>
+              New Password
 
-                <label className="block mb-2">
+            </label>
 
-                  Name
+            <input
+              type="password"
+              name="new_password"
+              value={formData.new_password}
+              onChange={handleChange}
+              placeholder="Enter new password"
+              className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              bg-white/5
+              border
+              border-heritage-gold/20
+              outline-none
+              focus:border-heritage-gold
+              "
+            />
 
-                </label>
+          </div>
 
-                <input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
+          <div>
 
-              </div>
+            <label className="block mb-2">
 
-              <div>
+              Confirm Password
 
-                <label className="block mb-2">
+            </label>
 
-                  Mobile Number
-
-                </label>
-
-                <input
-                  name="mobile_number"
-                  value={formData.mobile_number}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block mb-2">
-
-                  Date Of Birth
-
-                </label>
-
-                <input
-                  type="date"
-                  name="date_of_birth"
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
-
-              </div>
-                            <div>
-
-                <label className="block mb-2">
-
-                  City
-
-                </label>
-
-                <input
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block mb-2">
-
-                  State
-
-                </label>
-
-                <input
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block mb-2">
-
-                  Country
-
-                </label>
-
-                <input
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/5
-                  border
-                  border-heritage-gold/20
-                  outline-none
-                  focus:border-heritage-gold
-                  "
-                />
-
-              </div>
-
-              {/* Email (Read Only) */}
-
-              <div>
-
-                <label className="block mb-2">
-
-                  Email
-
-                </label>
-
-                <input
-                  value={user.email || ""}
-                  readOnly
-                  className="
-                  w-full
-                  px-4
-                  py-3
-                  rounded-xl
-                  bg-white/10
-                  border
-                  border-white/10
-                  text-gray-400
-                  cursor-not-allowed
-                  "
-                />
-
-              </div>
-
-            </div>
-
-            {/* Buttons */}
-
-            <div className="flex gap-3 mt-8">
-
-              <button
-
-                onClick={() => setShowModal(false)}
-
-                className="
-                flex-1
-                py-3
-                rounded-xl
-                border
-                border-heritage-gold
-                text-heritage-gold
-                hover:bg-white/5
-                transition-all
-                "
-
-              >
-
-                Cancel
-
-              </button>
-
-              <button
-
-                onClick={handleSave}
-
-                className="
-                flex-1
-                py-3
-                rounded-xl
-                bg-heritage-gold
-                text-black
-                font-semibold
-                hover:scale-105
-                transition-all
-                "
-
-              >
-
-                Save Changes
-
-              </button>
-
-            </div>
+            <input
+              type="password"
+              name="confirm_password"
+              value={formData.confirm_password}
+              onChange={handleChange}
+              placeholder="Confirm new password"
+              className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              bg-white/5
+              border
+              border-heritage-gold/20
+              outline-none
+              focus:border-heritage-gold
+              "
+            />
 
           </div>
 
         </div>
 
-      )}
+      </div>
+
+      {/* Buttons */}
+
+      <div className="flex gap-4 mt-10">
+
+        <button
+          onClick={() => setShowModal(false)}
+          className="
+          flex-1
+          py-3
+          rounded-xl
+          border
+          border-heritage-gold
+          text-heritage-gold
+          hover:bg-white/5
+          transition-all
+          "
+        >
+
+          Cancel
+
+        </button>
+
+        <button
+          onClick={handleSave}
+          className="
+          flex-1
+          py-3
+          rounded-xl
+          bg-heritage-gold
+          text-black
+          font-semibold
+          hover:scale-105
+          transition-all
+          "
+        >
+
+          Save Changes
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 
     </div>
 

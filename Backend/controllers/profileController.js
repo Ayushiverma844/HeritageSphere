@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const bcrypt = require("bcrypt");
 
 // ==========================================
 // Get Logged In User Profile
@@ -190,7 +191,133 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// ==========================================
+// Change Password
+// ==========================================
+
+const changePassword = async (req, res) => {
+  try {
+
+    const userId = req.user.id;
+
+    const {
+      current_password,
+      new_password,
+      confirm_password,
+    } = req.body;
+
+    if (
+      !current_password ||
+      !new_password ||
+      !confirm_password
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All password fields are required",
+      });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    // Get current user password
+
+    const [users] = await db.query(
+      `
+      SELECT password
+      FROM users
+      WHERE user_id = ?
+      `,
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Verify current password
+
+    const isMatch = await bcrypt.compare(
+      current_password,
+      users[0].password
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Prevent same password
+
+    const samePassword = await bcrypt.compare(
+      new_password,
+      users[0].password
+    );
+
+    if (samePassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "New password must be different from current password",
+      });
+    }
+
+    // Hash new password
+
+    const hashedPassword = await bcrypt.hash(
+      new_password,
+      10
+    );
+
+    // Update password
+
+    await db.query(
+      `
+      UPDATE users
+      SET password = ?
+      WHERE user_id = ?
+      `,
+      [
+        hashedPassword,
+        userId,
+      ]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword
 };

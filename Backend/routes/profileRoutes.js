@@ -17,4 +17,9 @@ router.put(
   profileController.updateProfile
 );
 
+router.put(
+  "/password",
+  authMiddleware,
+  profileController.changePassword
+);
 module.exports = router;
