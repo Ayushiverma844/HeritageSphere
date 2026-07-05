@@ -23,8 +23,10 @@ const getAllStories = async (req, res) => {
 
     let baseQuery = `
       FROM stories s
-      JOIN categories c ON s.category_id = c.category_id
-      LEFT JOIN places p ON s.place_id = p.place_id
+      JOIN categories c
+        ON s.category_id = c.category_id
+      LEFT JOIN places p
+        ON s.place_id = p.place_id
       WHERE 1=1
     `;
 
@@ -44,15 +46,25 @@ const getAllStories = async (req, res) => {
         AND (
           s.title LIKE ?
           OR s.summary LIKE ?
+          OR c.category_name LIKE ?
           OR p.name LIKE ?
+          OR s.source_name LIKE ?
         )
       `;
-      values.push(`%${search}%`, `%${search}%`, `%${search}%`);
+
+      values.push(
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+      );
     }
 
     // ======================
     // Count Query
     // ======================
+
     const [countResult] = await db.query(
       `SELECT COUNT(*) AS total ${baseQuery}`,
       values
@@ -63,25 +75,37 @@ const getAllStories = async (req, res) => {
     // ======================
     // Sorting
     // ======================
+
     let orderBy = "ORDER BY s.created_at DESC";
 
-    if (sort === "oldest") orderBy = "ORDER BY s.created_at ASC";
-    else if (sort === "title") orderBy = "ORDER BY s.title ASC";
+    if (sort === "oldest") {
+      orderBy = "ORDER BY s.created_at ASC";
+    } else if (sort === "title") {
+      orderBy = "ORDER BY s.title ASC";
+    }
 
     // ======================
     // Main Query
     // ======================
+
     const [stories] = await db.query(
       `
       SELECT
         s.story_id,
+        s.place_id,
+        s.slug,
         s.title,
         s.summary,
+        s.cover_image,
+        s.total_chapters,
+        s.source_name,
+        s.source_url,
         s.created_at,
+          s.source_name,
 
+        c.category_id,
         c.category_name,
 
-        p.place_id,
         p.name AS place_name
 
       ${baseQuery}
@@ -103,7 +127,6 @@ const getAllStories = async (req, res) => {
       },
       stories,
     });
-
   } catch (error) {
     console.log(error);
 
@@ -113,32 +136,30 @@ const getAllStories = async (req, res) => {
     });
   }
 };
+
 // ==========================
 // Get Story Details (FINAL)
 // ==========================
 const getStoryDetails = async (req, res) => {
   try {
-    const storyId = parseInt(req.params.id);
-
-    if (isNaN(storyId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Story ID",
-      });
-    }
+    const slug = req.params.slug;
 
     const [story] = await db.query(
       `
       SELECT
         s.story_id,
+        s.place_id,
+        s.slug,
         s.title,
         s.summary,
-        s.content,
+        s.cover_image,
+        s.total_chapters,
         s.source_name,
         s.source_url,
         s.created_at,
         s.updated_at,
 
+        c.category_id,
         c.category_name,
 
         p.place_id,
@@ -147,11 +168,16 @@ const getStoryDetails = async (req, res) => {
         p.state
 
       FROM stories s
-      JOIN categories c ON s.category_id = c.category_id
-      LEFT JOIN places p ON s.place_id = p.place_id
-      WHERE s.story_id = ?
+
+      JOIN categories c
+        ON s.category_id = c.category_id
+
+      LEFT JOIN places p
+        ON s.place_id = p.place_id
+
+      WHERE s.slug = ?
       `,
-      [storyId]
+      [slug]
     );
 
     if (story.length === 0) {
@@ -165,7 +191,6 @@ const getStoryDetails = async (req, res) => {
       success: true,
       story: story[0],
     });
-
   } catch (error) {
     console.log(error);
 

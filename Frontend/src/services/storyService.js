@@ -8,9 +8,8 @@ const getStories = async (params = {}) => {
   return response.data;
 };
 
-const getStoryDetails = async (id) => {
-  const response = await api.get(`/stories/${id}`);
-
+const getStoryDetails = async (slug) => {
+  const response = await api.get(`/stories/${slug}`);
   return response.data;
 };
 
