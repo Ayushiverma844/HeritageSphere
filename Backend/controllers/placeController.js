@@ -1,10 +1,17 @@
 const db = require("../config/db");
+
 const getPlaceDetails = async (req, res) => {
   try {
 
     const placeId = req.params.id;
 
-    // Place Basic Info
+    // agar login hai to middleware req.user bhej dega
+    const currentUserId = req.user?.id || null;
+
+    // ==========================================
+    // Place
+    // ==========================================
+
     const [place] = await db.query(
       `
       SELECT
@@ -21,11 +28,14 @@ const getPlaceDetails = async (req, res) => {
     if (place.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Place not found"
+        message: "Place not found",
       });
     }
 
-    // Place Detail
+    // ==========================================
+    // Details
+    // ==========================================
+
     const [details] = await db.query(
       `
       SELECT *
@@ -35,90 +45,162 @@ const getPlaceDetails = async (req, res) => {
       [placeId]
     );
 
+    // ==========================================
     // Gallery
+    // ==========================================
+
     const [gallery] = await db.query(
       `
       SELECT
-      image_id,
-      image_url,
-      caption,
-      is_cover
+        image_id,
+        image_url,
+        caption,
+        is_cover
       FROM gallery
       WHERE place_id = ?
-      ORDER BY is_cover DESC, image_id ASC      `,
+      ORDER BY is_cover DESC,image_id ASC
+      `,
       [placeId]
     );
 
+    // ==========================================
     // Reviews
+    // ==========================================
+
     const [reviews] = await db.query(
       `
       SELECT
-      r.review_id,
-      r.rating,
-      r.comment,
-      r.created_at,
-      u.name
+        r.review_id,
+        r.user_id,
+        r.rating,
+        r.comment,
+        r.created_at,
+        u.name
       FROM reviews r
       JOIN users u
-      ON r.user_id = u.user_id
-      WHERE r.place_id = ?
+      ON r.user_id=u.user_id
+      WHERE r.place_id=?
       ORDER BY r.created_at DESC
       `,
       [placeId]
     );
 
-    // Average Rating and Total Reviews
-    const [ratingData] = await db.query(
-`
-SELECT
-ROUND(AVG(rating),1) AS averageRating,
-COUNT(*) AS totalReviews
-FROM reviews
-WHERE place_id = ?
-`,
-[placeId]
-);
+    // ==========================================
+    // My Review
+    // ==========================================
 
-    // Nearby Places
-    const [nearby] = await db.query(
+    let myReview = null;
+
+    if (currentUserId) {
+
+      const [mine] = await db.query(
+        `
+        SELECT
+          review_id,
+          place_id,
+          rating,
+          comment,
+          created_at
+        FROM reviews
+        WHERE place_id=?
+        AND user_id=?
+        LIMIT 1
+        `,
+        [placeId, currentUserId]
+      );
+
+      myReview = mine[0] || null;
+    }
+
+    // ==========================================
+    // Rating Summary
+    // ==========================================
+
+    const [ratingData] = await db.query(
       `
       SELECT
-      np.distance_km,
-      p.place_id,
-      p.name,
-      p.city,
-      p.state
-      FROM nearby_places np
-      JOIN places p
-      ON np.nearby_place_id = p.place_id
-      WHERE np.place_id = ?
+      ROUND(AVG(rating),1) AS averageRating,
+      COUNT(*) AS totalReviews
+      FROM reviews
+      WHERE place_id=?
       `,
       [placeId]
     );
 
-   res.json({
-  success: true,
+    // ==========================================
+    // Nearby
+    // ==========================================
 
-  place: place[0],
+    const [nearby] = await db.query(
+      `
+      SELECT
+        np.distance_km,
+        p.place_id,
+        p.name,
+        p.city,
+        p.state
+      FROM nearby_places np
+      JOIN places p
+      ON np.nearby_place_id=p.place_id
+      WHERE np.place_id=?
+      `,
+      [placeId]
+    );
 
-  details: details[0] || {},
+    // ==========================================
+    // Story
+    // ==========================================
 
-  gallery,
+    const [story] = await db.query(
+      `
+      SELECT
+        story_id,
+        slug,
+        title,
+        summary
+      FROM stories
+      WHERE place_id=?
+      LIMIT 1
+      `,
+      [placeId]
+    );
 
-  reviews,
+    // ==========================================
+    // Response
+    // ==========================================
 
-  nearby,
+    res.json({
 
-  rating: ratingData[0]
-});
+      success: true,
+
+      place: place[0],
+
+      details: details[0] || {},
+
+      gallery,
+
+      reviews,
+
+      myReview,
+
+      nearby,
+
+      rating: ratingData[0],
+
+      story: story[0] || null
+
+    });
 
   } catch (error) {
 
     console.log(error);
 
     res.status(500).json({
+
       success: false,
+
       message: error.message
+
     });
 
   }
