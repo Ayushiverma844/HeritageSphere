@@ -8,8 +8,8 @@ const StorySkeleton = ({ count = 8 }) => {
           key={index}
           className="
             relative
-            w-75
-            h-120
+            w-88
+            h-135
             mx-auto
             animate-pulse
           "
@@ -21,8 +21,9 @@ const StorySkeleton = ({ count = 8 }) => {
           <div className="absolute left-4 top-0 right-0 bottom-5 rounded-r-md bg-white/5 border border-white/10 overflow-hidden">
 
             {/* Image */}
-            <div className="flex justify-center pt-10">
-              <div className="w-36 h-36 rounded-full bg-white/10" />
+            <div className="flex justify-center pt-5">
+              <div className="w-75
+                h-42  bg-white/10" />
             </div>
 
             {/* Category */}

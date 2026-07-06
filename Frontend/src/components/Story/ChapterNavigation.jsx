@@ -19,6 +19,7 @@ const ChapterNavigation = ({
       items-center
       gap-4
       mt-8
+      mb-4
       "
     >
 

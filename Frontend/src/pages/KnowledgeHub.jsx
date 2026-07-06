@@ -120,7 +120,7 @@ useEffect(() => {
     });
   };
     return (
-    <div className="min-h-screen pt-10 px-4 md:px-8 text-white">
+    <div className="min-h-screen pt-8 px-2 md:px-4 text-white">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
 
@@ -190,7 +190,7 @@ useEffect(() => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-14 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-x-2 gap-y-16">
                 {stories.map((story, index) => (
                   <StoryBookCard
                     key={story.story_id}

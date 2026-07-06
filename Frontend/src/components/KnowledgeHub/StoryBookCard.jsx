@@ -12,8 +12,8 @@ const StoryBookCard = ({ story, coverColor }) => {
         className="
         relative
         z-0
-        w-75
-        h-120
+        w-88
+        h-135
         transition-all
         duration-500
         ease-out
@@ -107,7 +107,7 @@ const StoryBookCard = ({ story, coverColor }) => {
             <div
               className="
               absolute
-              inset-3
+              inset-1.5
               rounded
               border
               border-yellow-700/60
@@ -120,14 +120,14 @@ const StoryBookCard = ({ story, coverColor }) => {
 
             {/* Image */}
 
-            <div className="flex justify-center pt-10">
+            <div className="flex justify-center pt-5">
               <div
                 className="
-                w-36
-                h-36
-                rounded-full
+                w-75
+                h-42
+                
                 overflow-hidden
-                border-[3px]
+                border
                 border-yellow-700
                 shadow-xl
               "
@@ -177,7 +177,7 @@ const StoryBookCard = ({ story, coverColor }) => {
 
             {/* Title */}
 
-            <div className="px-5 mt-6 min-h-17.5 flex items-center justify-center">
+            <div className="px-3 mt-6 min-h-17.5 flex items-center justify-center">
               <h2
                 className="
                 text-center
@@ -202,7 +202,7 @@ const StoryBookCard = ({ story, coverColor }) => {
 
             {/* Summary */}
 
-            <div className="px-7">
+            <div className="px-4 mt-5">
               <p
                 className="
                 text-center
@@ -211,8 +211,9 @@ const StoryBookCard = ({ story, coverColor }) => {
                 transition-colors
                 duration-500
                 text-[15px]
-                leading-7
+                leading-4
                 line-clamp-3
+                
               "
                 style={{
                   fontFamily: "Cormorant Garamond, serif",
@@ -231,6 +232,7 @@ const StoryBookCard = ({ story, coverColor }) => {
                   <span>{story.place_name}</span>
                 </div>
               )}
+             
 
               <div className="flex items-center justify-center gap-2 text-yellow-300 text-sm">
                 <BookOpen size={15} />
@@ -288,7 +290,7 @@ const StoryBookCard = ({ story, coverColor }) => {
           "
           />
 
-          <div
+           <div
             className="absolute bottom-0 left-4 right-0 h-5 rounded-b-md"
             style={{
               background:
@@ -303,6 +305,8 @@ const StoryBookCard = ({ story, coverColor }) => {
                 "linear-gradient(to bottom,#f7ecd5,#d7c19a)",
             }}
           />
+
+         
         </div>
       </div>
     </Link>
