@@ -20,11 +20,59 @@ import {
 import heroImg from "../assests/1.jpg";
 import placeService from "../services/placeService";
 import reviewService from "../services/reviewService";
+import collectionService from "../services/collectionService";
 import stories from "../pages/Story"
 
 const PlaceDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [savedItems, setSavedItems] = useState([]);
+  useEffect(() => {
+  fetchSavedItems();
+}, []);
+
+const fetchSavedItems = async () => {
+  try {
+    const res = await collectionService.getMyCollection();
+
+    const placeIds = (res.places || []).map(
+      (p) => p.place_id
+    );
+
+    setSavedItems(placeIds);
+  } catch (err) {
+    console.log(err);
+  }
+};
+const handleSave = async () => {
+  try {
+    const isSaved = savedItems.includes(place.place_id);
+
+    if (isSaved) {
+      await collectionService.removeItem(
+        "PLACE",
+        place.place_id
+      );
+
+      setSavedItems((prev) =>
+        prev.filter((id) => id !== place.place_id)
+      );
+    } else {
+      await collectionService.saveItem(
+        "PLACE",
+        place.place_id
+      );
+
+      setSavedItems((prev) => [
+        ...prev,
+        place.place_id,
+      ]);
+    }
+  } catch (err) {
+    console.log("Save error:", err);
+  }
+};
+
 
   // -----------------------------
   // Active Tab
@@ -1032,22 +1080,33 @@ const handleDeleteReview = async () => {
 
             <div className="mt-8 space-y-3">
 
-              <button
-                className="
-                w-full
-                py-3
-                rounded-xl
-                border
-                border-heritage-gold/30
-                flex
-                items-center
-                justify-center
-                gap-2
-                "
-              >
-                <Bookmark size={18} />
-                Save to Collection
-              </button>
+             <button
+  onClick={handleSave}
+  className="
+  w-full
+  py-3
+  rounded-xl
+  border
+  border-heritage-gold/30
+  flex
+  items-center
+  justify-center
+  gap-2
+  "
+>
+  <Bookmark
+    size={18}
+    className={
+      savedItems.includes(place.place_id)
+        ? "text-heritage-gold fill-heritage-gold"
+        : "text-white"
+    }
+  />
+
+  {savedItems.includes(place.place_id)
+    ? "Saved"
+    : "Save to Collection"}
+</button>
 
               {story && (
 
