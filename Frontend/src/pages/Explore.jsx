@@ -3,23 +3,64 @@ import Navbar from '../components/Navbar'
 import placeService from "../services/placeService";
 import collectionService from "../services/collectionService";
 import {
-  Search,
+   Search,
   Star,
   ChevronDown,
   Landmark,
+  BadgeCheck,
   Castle,
   Building2,
   Trees,
   ScrollText,
+  Mountain,
+  TentTree,
+  TreePine,
+    Map as MapIcon,
+  Church,
+  Landmark as MosqueIcon,
+  Library,
+  Archive,
   SlidersHorizontal ,
     MapPin, 
     Bookmark
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+ const categoryIconMap = {
+  Temple: Landmark,
 
+  Mosque: MosqueIcon,
+
+  Church: Church,
+
+  Gurudwara: Landmark,
+
+  Monastery: Library,
+
+  Fort: Castle,
+
+  Palace: Building2,
+
+  Monument: Landmark,
+
+  "Archaeological Site": Archive,
+
+  Cave: Mountain,
+
+  Museum: ScrollText,
+
+  "Heritage Village": TentTree,
+
+  "National Park": Trees,
+
+  "Wildlife Sanctuary": TreePine,
+
+  "Natural Attraction": MapIcon,
+};
 
 const Explore = () => {
+
+ 
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const location = useLocation();
@@ -90,18 +131,19 @@ const categories = [
   {
     id: 0,
     name: "All",
-    icon: Landmark
+    icon: BadgeCheck 
   },
 
   ...[
     ...new Map(
       places.map((p) => [
         p.category_name,
-        {
+         {
           id: p.category_name,
           name: p.category_name,
-          icon: Landmark
-        }
+          icon:
+            categoryIconMap[p.category_name] || Landmark,
+        },
       ])
     ).values()
   ]
@@ -280,8 +322,10 @@ active
 "border border-heritage-gold/30 bg-white/5 text-heritage-gold group-hover:scale-110 group-hover:border-heritage-gold group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] group-hover:-translate-y-2"
 }
 `}
->
-            <Icon size={24} />
+>        
+
+<Icon size={24} />
+           
           </div>
 
           <span className="text-sm text-gray-300">
