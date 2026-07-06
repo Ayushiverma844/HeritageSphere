@@ -4,6 +4,7 @@ import {
   MapPin,
   Star,
   BookOpen,
+   Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -52,6 +53,36 @@ const MyCollection = () => {
       setLoading(false);
     }
   };
+
+  const handleRemove = async (item) => {
+    const confirmed = window.confirm(
+  "Are you sure you want to remove this item from your collection?"
+);
+
+if (!confirmed) return;
+  try {
+    await collectionService.removeItem(
+      item.item_type,
+      item.item_type === "PLACE"
+        ? item.place_id
+        : item.story_id
+    );
+
+    setCollection((prev) =>
+      prev.filter(
+        (saved) =>
+          !(
+            saved.saved_id === item.saved_id &&
+            saved.item_type === item.item_type
+          )
+      )
+    );
+
+  } catch (err) {
+    console.log(err);
+    alert("Failed to remove item.");
+  }
+};
 
   const filteredData = useMemo(() => {
     if (activeTab === "all") return collection;
@@ -288,6 +319,7 @@ const MyCollection = () => {
 
               <div
                 className="
+                relative
                 lg:w-2/3
                 bg-white/5
                 backdrop-blur-md
@@ -302,6 +334,7 @@ const MyCollection = () => {
               >
 
                 <div className="flex flex-col md:flex-row">
+                   
 
                   {/* Image */}
 
@@ -412,9 +445,34 @@ const MyCollection = () => {
                     >
                       View Details
                     </button>
-
+                    
                   </div>
-
+                 
+                  {/* remove */}
+                  <button
+  onClick={() => handleRemove(item)}
+  className="
+    absolute
+    top-4
+    right-4
+    w-8
+    h-8
+    rounded-full
+    bg-red-500/20
+    hover:bg-red-500
+    flex
+    items-center
+    justify-center
+    transition
+    z-10
+  "
+>
+  <Trash2
+    size={16}
+    className="text-red-400 hover:text-white"
+  />
+</button>
+                  
                 </div>
 
               </div>

@@ -60,7 +60,7 @@ const Story = () => {
   }
 
   return (
-    <div className="min-h-screen pt-10 px-4 md:px-6 overflow-hidden">
+    <div className="min-h-screen pt-8 px-2 md:px-4 overflow-hidden">
 
       <div className="max-w-7xl mx-auto">
 
