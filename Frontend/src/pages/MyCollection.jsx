@@ -245,7 +245,7 @@ const MyCollection = () => {
                         navigate(
                           item.item_type === "PLACE"
                             ? `/places/${item.place_id}`
-                            : `/stories/${item.story_id}`
+                            : `/stories/${item.slug}`
                         )
                       }
                       className="mt-5 px-5 py-2.5 rounded-xl bg-heritage-gold text-black font-semibold hover:scale-105 transition"

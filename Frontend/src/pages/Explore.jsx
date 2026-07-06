@@ -66,6 +66,7 @@ const Explore = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
+  const [allPlaces, setAllPlaces] = useState([]);
 const [loading, setLoading] = useState(true);
 
 const [search, setSearch] = useState("");
@@ -100,7 +101,14 @@ const fetchPlaces = async () => {
 
     });
 
-    setPlaces(response.places || []);
+   const fetchedPlaces = response.places || [];
+
+setPlaces(fetchedPlaces);
+
+// Store master list only once
+if (allPlaces.length === 0) {
+  setAllPlaces(fetchedPlaces);
+}
 
   } catch (err) {
 
@@ -131,22 +139,23 @@ const categories = [
   {
     id: 0,
     name: "All",
-    icon: BadgeCheck 
+    icon: BadgeCheck,
   },
 
   ...[
     ...new Map(
-      places.map((p) => [
+      allPlaces.map((p) => [
         p.category_name,
-         {
+        {
           id: p.category_name,
           name: p.category_name,
           icon:
-            categoryIconMap[p.category_name] || Landmark,
+            categoryIconMap[p.category_name] ||
+            Landmark,
         },
       ])
-    ).values()
-  ]
+    ).values(),
+  ],
 
 ];
 
@@ -453,8 +462,8 @@ All States
 {[
 ...new Set(
 
-places.map(
-p=>p.state
+allPlaces.map(
+p => p.state
 )
 
 )

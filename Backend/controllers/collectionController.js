@@ -162,6 +162,7 @@ const getMyCollection = async (req, res) => {
         st.story_id,
         st.title,
         st.summary,
+        st.slug,
 
         c.category_name,
 
