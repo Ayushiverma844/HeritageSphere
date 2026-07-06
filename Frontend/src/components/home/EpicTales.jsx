@@ -165,6 +165,7 @@ const EpicTales = () => {
                   items-center
                   justify-center
                   hover:border-heritage-gold
+                  cursor-pointer
                   "
 
                 >

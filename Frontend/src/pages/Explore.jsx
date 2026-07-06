@@ -629,7 +629,7 @@ places.map((place,index)=>(
     e.stopPropagation();
     handleSave(place);
   }}
-  className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-black transition"
+  className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-black transition cursor-pointer"
 >
   <Bookmark
     size={18}
