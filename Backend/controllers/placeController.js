@@ -153,23 +153,13 @@ const  getSimilarPlaces = async (req, res) => {
         // Get similar places
         const [places] = await db.query(
             `
-            SELECT
-                p.place_id,
-                p.name,
-                p.city,
-                p.state,
-                g.image_url
-            FROM places p
-
-           LEFT JOIN (
-    SELECT
-        place_id,
-        MAX(image_url) AS image_url
-    FROM gallery
-    WHERE is_cover = 1
-    GROUP BY place_id
-) g
-ON p.place_id = g.place_id
+          SELECT
+    p.place_id,
+    p.name,
+    p.city,
+    p.state,
+    p.image_url
+FROM places p
 
             WHERE p.category_id = ?
             AND p.place_id <> ?
@@ -200,227 +190,194 @@ ON p.place_id = g.place_id
 // ==========================
 // Get All Places
 // ==========================
+
 const getAllPlaces = async (req, res) => {
-
-    try {
-
-        let {
-            page = 1,
-            limit = 9,
-            search,
-            category,
-            state,
-            city,
-            sort = "newest"
-        } = req.query;
-
-        page = parseInt(page);
-        limit = parseInt(limit);
-
-        if (page < 1) page = 1;
-        if (limit < 1) limit = 9;
-
-        const offset = (page - 1) * limit;
-
-        let query = `
-            SELECT
-
-                p.place_id,
-                p.name,
-                p.city,
-                p.state,
-                p.country,
-                p.short_description,
-                p.best_time_to_visit,
-
-                c.category_name,
-
-                g.image_url AS cover_image,
-
-                ROUND(AVG(r.rating),1) AS average_rating,
-                COUNT(DISTINCT r.review_id) AS total_reviews
-
-            FROM places p
-
-            JOIN categories c
-            ON p.category_id = c.category_id
-
-            LEFT JOIN gallery g
-            ON p.place_id = g.place_id
-            AND g.is_cover = 1
-
-            LEFT JOIN reviews r
-            ON p.place_id = r.place_id
-
-            WHERE 1=1
-        `;
-
-        let countQuery = `
-            SELECT COUNT(DISTINCT p.place_id) AS total
-
-            FROM places p
-
-            JOIN categories c
-            ON p.category_id = c.category_id
-
-            WHERE 1=1
-        `;
-
-        const values = [];
-
-        // Search
-
-        if (search) {
-
-            query += `
-                AND (
-                    p.name LIKE ?
-                    OR p.city LIKE ?
-                    OR p.state LIKE ?
-                    OR p.short_description LIKE ?
-                )
-            `;
-
-            countQuery += `
-                AND (
-                    p.name LIKE ?
-                    OR p.city LIKE ?
-                    OR p.state LIKE ?
-                    OR p.short_description LIKE ?
-                )
-            `;
-
-            values.push(`%${search}%`);
-            values.push(`%${search}%`);
-            values.push(`%${search}%`);
-            values.push(`%${search}%`);
-
-        }
-
-        // Category
-
-        if (category) {
-
-            query += " AND c.category_name = ?";
-            countQuery += " AND c.category_name = ?";
-
-            values.push(category);
-
-        }
-
-        // State
-
-        if (state) {
-
-            query += " AND p.state = ?";
-            countQuery += " AND p.state = ?";
-
-            values.push(state);
-
-        }
-
-        // City
-
-        if (city) {
-
-            query += " AND p.city = ?";
-            countQuery += " AND p.city = ?";
-
-            values.push(city);
-
-        }
-
-        query += `
-           GROUP BY
-
-p.place_id,
-p.name,
-p.city,
-p.state,
-p.country,
-p.short_description,
-p.best_time_to_visit,
-c.category_name,
-g.image_url
-        `;
-
-        // Sorting
-
-        switch (sort) {
-
-            case "oldest":
-
-                query += " ORDER BY p.created_at ASC";
-                break;
-
-            case "name":
-
-                query += " ORDER BY p.name ASC";
-                break;
-
-            default:
-
-                query += " ORDER BY p.created_at DESC";
-
-        }
-
-        query += " LIMIT ? OFFSET ?";
-
-        const dataValues = [...values, limit, offset];
-
-        const [places] = await db.query(
-            query,
-            dataValues
-        );
-
-        const [count] = await db.query(
-            countQuery,
-            values
-        );
-
-        const totalPlaces = count[0].total;
-
-        res.json({
-
-            success: true,
-
-            pagination: {
-
-                currentPage: page,
-
-                totalPages: Math.ceil(totalPlaces / limit),
-
-                totalPlaces,
-
-                limit,
-
-                hasNextPage:
-                    page < Math.ceil(totalPlaces / limit),
-
-                hasPreviousPage:
-                    page > 1
-
-            },
-
-            places
-
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
+  try {
+    let {
+      page = 1,
+      limit = 9,
+      search,
+      category,
+      state,
+      city,
+      sort = "newest"
+    } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 9;
+
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT
+        p.place_id,
+        p.name,
+        p.city,
+        p.state,
+        p.country,
+        p.image_url,
+        p.entry_fee,
+
+        ROUND(AVG(r.rating), 1) AS average_rating,
+
+        pd.short_description,
+        pd.best_time_to_visit,
+
+        c.category_name
+
+      FROM places p
+
+      JOIN categories c
+      ON p.category_id = c.category_id
+
+      LEFT JOIN place_detail pd
+      ON p.place_id = pd.place_id
+
+      LEFT JOIN reviews r
+      ON p.place_id = r.place_id
+
+      WHERE 1=1
+    `;
+
+    let countQuery = `
+      SELECT COUNT(*) AS total
+
+      FROM places p
+
+      JOIN categories c
+      ON p.category_id = c.category_id
+
+      LEFT JOIN place_detail pd
+      ON p.place_id = pd.place_id
+
+      WHERE 1=1
+    `;
+
+    const values = [];
+
+    // Search
+    if (search) {
+      query += `
+        AND (
+          p.name LIKE ?
+          OR p.city LIKE ?
+          OR p.state LIKE ?
+          OR pd.short_description LIKE ?
+        )
+      `;
+
+      countQuery += `
+        AND (
+          p.name LIKE ?
+          OR p.city LIKE ?
+          OR p.state LIKE ?
+          OR pd.short_description LIKE ?
+        )
+      `;
+
+      values.push(
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+      );
     }
 
+    // Category
+    if (category) {
+      query += ` AND c.category_name = ? `;
+      countQuery += ` AND c.category_name = ? `;
+
+      values.push(category);
+    }
+
+    // State
+    if (state) {
+      query += ` AND p.state = ? `;
+      countQuery += ` AND p.state = ? `;
+
+      values.push(state);
+    }
+
+    // City
+    if (city) {
+      query += ` AND p.city = ? `;
+      countQuery += ` AND p.city = ? `;
+
+      values.push(city);
+    }
+
+    // GROUP BY before ORDER BY
+    query += `
+      GROUP BY
+        p.place_id,
+        p.name,
+        p.city,
+        p.state,
+        p.country,
+        p.image_url,
+        p.entry_fee,
+        pd.short_description,
+        pd.best_time_to_visit,
+        c.category_name,
+        p.created_at
+    `;
+
+    switch (sort) {
+      case "oldest":
+        query += ` ORDER BY p.created_at ASC`;
+        break;
+
+      case "name":
+        query += ` ORDER BY p.name ASC`;
+        break;
+
+      default:
+        query += ` ORDER BY p.created_at DESC`;
+    }
+
+    query += ` LIMIT ? OFFSET ?`;
+
+    const [places] = await db.query(
+      query,
+      [...values, limit, offset]
+    );
+
+    const [count] = await db.query(
+      countQuery,
+      values
+    );
+
+    const totalPlaces = count[0].total;
+
+    res.json({
+      success: true,
+
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalPlaces / limit),
+        totalPlaces,
+        limit,
+        hasNextPage: page < Math.ceil(totalPlaces / limit),
+        hasPreviousPage: page > 1
+      },
+
+      places
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };
+
 
 module.exports = {
   getPlaceDetails,

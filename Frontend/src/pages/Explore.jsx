@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from '../components/Navbar'
+import placeService from "../services/placeService";
+import collectionService from "../services/collectionService";
 import {
   Search,
   Star,
@@ -10,107 +12,150 @@ import {
   Trees,
   ScrollText,
   SlidersHorizontal ,
-    MapPin, Heart
+    MapPin, 
+    Bookmark
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 
-
-const categories = [
-  { id: 1, name: "Temple", icon: Landmark },
-  { id: 2, name: "Fort", icon: Castle },
-  { id: 3, name: "Palace", icon: Building2 },
-  { id: 4, name: "Museum", icon: ScrollText },
-  { id: 5, name: "Monument", icon: Landmark },
-  
-  // hidden initialy
-  { id: 6, name: "Natural Attraction", icon: Trees },
-  { id: 7, name: "Lake", icon: Trees },
-  { id: 8, name: "Cave", icon: Castle },
-  { id: 9, name: "Garden", icon: Trees },
-  { id: 10, name: "Church", icon: Building2 },
-  { id: 11, name: "Mosque", icon: Building2 },
-  { id: 12, name: "UNESCO Site", icon: Landmark },
-];
-
-const places = [
-  {
-    id: 1,
-    name: "Hawa Mahal",
-    category: "Palace",
-    location: "Jaipur, Rajasthan",
-    rating: 4.8,
-    reviews: 890,
-    price: 50,
-    image: "/places/hawamahal.jpg",
-    height: "h-[320px]",
-  },
-  {
-    id: 2,
-    name: "Konark Sun Temple",
-    category: "Temple",
-    location: "Konark, Odisha",
-    rating: 4.9,
-    reviews: 320,
-    price: 40,
-    image: "/places/konark.jpg",
-    height: "h-[450px]",
-  },
-  {
-    id: 3,
-    name: "Red Fort",
-    category: "Fort",
-    location: "Delhi",
-    rating: 4.7,
-    reviews: 1120,
-    price: 60,
-    image: "/places/redfort.jpg",
-    height: "h-[280px]",
-  },
-  {
-    id: 4,
-    name: "Khajuraho Temples",
-    category: "Temple",
-    location: "Madhya Pradesh",
-    rating: 4.8,
-    reviews: 540,
-    price: 45,
-    image: "/places/khajuraho.jpg",
-    height: "h-[400px]",
-  },
-  {
-    id: 5,
-    name: "Amer Fort",
-    category: "Fort",
-    location: "Jaipur, Rajasthan",
-    rating: 4.7,
-    reviews: 760,
-    price: 55,
-    image: "/places/amerfort.jpg",
-    height: "h-[300px]",
-  },
-  {
-    id: 6,
-    name: "Victoria Memorial",
-    category: "Monument",
-    location: "Kolkata, West Bengal",
-    rating: 4.6,
-    reviews: 980,
-    price: 35,
-    image: "/places/victoria.jpg",
-    height: "h-[420px]",
-  },
-];
 
 const Explore = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [places, setPlaces] = useState([]);
+const [loading, setLoading] = useState(true);
 
-const selectedCategory = location.state?.category || "All";
-  
+const [search, setSearch] = useState("");
 
+const [selectedState, setSelectedState] = useState("");
+
+const [sort, setSort] = useState("newest");
+
+const [savedItems, setSavedItems] = useState([]);
+
+
+const [selectedCategory, setSelectedCategory] = useState(
+  location.state?.category || ""
+);
+
+const fetchPlaces = async () => {
+  try {
+
+    setLoading(true);
+
+    const response = await placeService.getPlaces({
+
+      search,
+
+      category: selectedCategory || undefined,
+
+      state: selectedState || undefined,
+
+      sort,
+
+      limit: 100
+
+    });
+
+    setPlaces(response.places || []);
+
+  } catch (err) {
+
+    console.log(err);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
+
+
+useEffect(() => {
+
+  fetchPlaces();
+
+}, [
+  search,
+  selectedCategory,
+  selectedState,
+  sort
+]);
+
+
+const categories = [
+
+  {
+    id: 0,
+    name: "All",
+    icon: Landmark
+  },
+
+  ...[
+    ...new Map(
+      places.map((p) => [
+        p.category_name,
+        {
+          id: p.category_name,
+          name: p.category_name,
+          icon: Landmark
+        }
+      ])
+    ).values()
+  ]
+
+];
+
+  const handleSave = async (place) => {
+  try {
+    const isSaved = savedItems.includes(place.place_id);
+
+    if (isSaved) {
+      await collectionService.removeItem(
+        "PLACE",
+        place.place_id
+      );
+
+     setSavedItems((prev) =>
+  prev.includes(place.place_id)
+    ? prev.filter((id) => id !== place.place_id)
+    : [...prev, place.place_id]
+);
+    } else {
+      await collectionService.saveItem(
+        "PLACE",
+        place.place_id
+      );
+
+      setSavedItems((prev) => [
+        ...prev,
+        place.place_id,
+      ]);
+    }
+  } catch (err) {
+    console.log("Save error:", err);
+  }
+};
+
+useEffect(() => {
+  fetchSavedItems();
+}, []);
+
+const fetchSavedItems = async () => {
+  try {
+    const res = await collectionService.getMyCollection();
+
+    const placeIds = (res.places || []).map(
+      (p) => p.place_id
+    );
+
+    setSavedItems(placeIds);
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <>
      <Navbar/>
@@ -149,11 +194,13 @@ const selectedCategory = location.state?.category || "All";
   >
     <Search size={20} />
 
-    <input
-      type="text"
-      placeholder="Search heritage places..."
-      className="bg-transparent outline-none w-full"
-    />
+   <input
+type="text"
+placeholder="Search heritage places..."
+value={search}
+onChange={(e)=>setSearch(e.target.value)}
+className="bg-transparent outline-none w-full"
+/>
   </div>
 
   {/* Filter Button */}
@@ -185,47 +232,54 @@ const selectedCategory = location.state?.category || "All";
 
   <div className="flex flex-wrap gap-5">
 
-    {(showAllCategories
+   {(showAllCategories
       ? categories
-      : categories.slice(0, 5)
-    ).map((item , index) => {
-      const Icon = item.icon;
+      : categories.slice(0,5)
+).map((item)=>{
 
-      return (
-      <button
+const Icon = item.icon;
+
+const active =
+selectedCategory === item.name ||
+(item.name==="All" && selectedCategory==="");
+
+return (
+     <button
   key={item.id}
-  className={`
-    group
-    flex
-    flex-col
-    items-center
-    gap-2
-    ${item.id > 5 ? "animate-categoryReveal" : ""}
-  `}
-  style={
-    item.id > 5
-      ? {
-          animationDelay: `${(item.id - 5) * 80}ms`,
-          animationFillMode: "both",
-        }
-      : {}
+  onClick={() =>
+    setSelectedCategory(
+      item.name === "All"
+        ? ""
+        : item.name
+    )
   }
->
-          <div
   className="
-    h-16 w-16
-    rounded-full
-    border border-heritage-gold/30
-    bg-white/5
-    backdrop-blur-md
-    flex items-center justify-center
-    text-heritage-gold
-    transition-all duration-500
-    group-hover:scale-110
-    group-hover:border-heritage-gold
-    group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]
-    group-hover:-translate-y-2
+  group
+  flex
+  flex-col
+  items-center
+  gap-2
   "
+>
+  <div
+className={`
+h-16
+w-16
+rounded-full
+flex
+items-center
+justify-center
+transition-all
+duration-500
+
+${
+active
+?
+"bg-heritage-gold text-black border border-heritage-gold scale-110 shadow-[0_0_20px_rgba(212,175,55,.35)]"
+:
+"border border-heritage-gold/30 bg-white/5 text-heritage-gold group-hover:scale-110 group-hover:border-heritage-gold group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] group-hover:-translate-y-2"
+}
+`}
 >
             <Icon size={24} />
           </div>
@@ -324,23 +378,59 @@ const selectedCategory = location.state?.category || "All";
           State
         </label>
 
-        <select
-          className="
-          w-full
-          p-4
-          rounded-xl
-          bg-heritage-dark
-          border border-white/10
-          outline-none
-          "
-        >
-          <option>All States</option>
-          <option>Rajasthan</option>
-          <option>Madhya Pradesh</option>
-          <option>Delhi</option>
-          <option>Tamil Nadu</option>
-          <option>Odisha</option>
-        </select>
+       <select
+
+value={selectedState}
+
+onChange={(e)=>
+
+setSelectedState(e.target.value)
+
+}
+
+className="
+w-full
+p-4
+rounded-xl
+bg-heritage-dark
+border
+border-white/10
+outline-none
+"
+
+>
+
+<option value="">
+
+All States
+
+</option>
+
+{[
+...new Set(
+
+places.map(
+p=>p.state
+)
+
+)
+
+]
+
+.map((state)=>(
+
+<option
+key={state}
+value={state}
+>
+
+{state}
+
+</option>
+
+))}
+
+</select>
 
       </div>
 
@@ -351,21 +441,47 @@ const selectedCategory = location.state?.category || "All";
           Sort By
         </label>
 
-        <select
-          className="
-          w-full
-          p-4
-          rounded-xl
-          bg-heritage-dark
-          border border-white/10
-          outline-none
-          "
-        >
-          <option>Popular</option>
-          <option>Highest Rated</option>
-          <option>Most Reviewed</option>
-          <option>Name A-Z</option>
-        </select>
+       <select
+
+value={sort}
+
+onChange={(e)=>
+
+setSort(e.target.value)
+
+}
+
+className="
+w-full
+p-4
+rounded-xl
+bg-heritage-dark
+border
+border-white/10
+outline-none
+"
+
+>
+
+<option value="newest">
+
+Newest
+
+</option>
+
+<option value="oldest">
+
+Oldest
+
+</option>
+
+<option value="name">
+
+Name A-Z
+
+</option>
+
+</select>
 
       </div>
 
@@ -381,18 +497,47 @@ const selectedCategory = location.state?.category || "All";
       {/* Gallery */}
 
       <div className="max-w-7xl mx-auto px-5 mt-16 pb-20">
+        {loading && (
 
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
+<div
+className="
+text-center
+py-20
+text-gray-400
+text-lg
+"
+>
 
-          {places.map((place) => (
+Loading Heritage Places...
+
+</div>
+
+)}
+
+       {!loading && (
+
+<div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
+
+          {places.length === 0 ? (
+
+<div className=" text-center py-20 text-gray-400">
+
+No Heritage Places Found.
+
+</div>
+
+) : (
+
+places.map((place,index)=>(
+
  <div
-  key={place.id}
+  key={place.place_id}
   onClick={() =>
-    navigate(`/place/${place.id}`, {
-      state: {
-        place,
-      },
-    })
+    navigate(
+
+`/places/${place.place_id}`
+
+)
   }
   className="
   relative
@@ -406,26 +551,42 @@ const selectedCategory = location.state?.category || "All";
 >
     {/* Image */}
     <img
-      src={place.image}
-      alt={place.name}
-      className={`
-        w-full
-        object-cover
-        ${place.height}
-        transition-transform
-        duration-700
-        group-hover:scale-110
-      `}
-    />
+  src={
+    place.image_url ||
+    "/placeholder.jpg"
+  }
+  alt={place.name}
+  className="
+  w-full
+  h-80
+  object-cover
+  transition-transform
+  duration-700
+  group-hover:scale-110
+  "
+/>
 
     {/* Gradient */}
     <div className="absolute inset-0 bg-linear-to-t from-black via-black/30 to-transparent" />
 
-    {/* Heart Icon */}
+    {/* save Icon */}
     <div className="absolute top-4 right-4">
-      <button className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:text-red-400 transition">
-        <Heart size={18} />
-      </button>
+     <button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleSave(place);
+  }}
+  className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-black transition"
+>
+  <Bookmark
+    size={18}
+    className={
+      savedItems.includes(place.place_id)
+        ? "text-heritage-gold fill-heritage-gold"
+        : "text-white"
+    }
+  />
+</button>
     </div>
 
     {/* Bottom Content */}
@@ -435,11 +596,11 @@ const selectedCategory = location.state?.category || "All";
       <div className="flex items-center justify-between mb-2">
 
         <span className="text-xs px-3 py-1 rounded-full bg-heritage-gold/20 text-heritage-gold border border-heritage-gold/30">
-          {place.category}
+          {place.category_name}
         </span>
 
         <span className="text-sm text-heritage-gold font-semibold">
-          ₹{place.price}
+          {place.entry_fee || "Free"}
         </span>
 
       </div>
@@ -452,7 +613,7 @@ const selectedCategory = location.state?.category || "All";
       {/* Location */}
       <div className="flex items-center gap-2 mt-1 text-gray-300 text-sm">
         <MapPin size={14} />
-        <span>{place.location}</span>
+        <span>{place.city} , {place.state}</span>
       </div>
 
       {/* Rating */}
@@ -464,18 +625,18 @@ const selectedCategory = location.state?.category || "All";
           color="#d4af37"
         />
 
-        <span>{place.rating}</span>
-        <span className="text-gray-400 text-sm">
-          ({place.reviews})
-        </span>
+        <span>{place.average_rating || "N/A"}</span>
+        
 
       </div>
 
     </div>
   </div>
-))}
-        </div>
+))
 
+)}
+        </div>
+       )}
       </div>
 
     </div>

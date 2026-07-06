@@ -121,7 +121,7 @@ const EpicTales = () => {
                 alt={story.title}
 
                 className="
-                h-52
+                h-60
                 w-full
                 object-cover
                 group-hover:scale-110
