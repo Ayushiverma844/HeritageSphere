@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from '../components/Navbar'
 import placeService from "../services/placeService";
 import collectionService from "../services/collectionService";
+import Footer from "../components/Footer";
 import {
    Search,
   Star,
@@ -25,6 +26,7 @@ import {
     Bookmark
 } from "lucide-react";
 import { useLocation, useNavigate ,useSearchParams  } from "react-router-dom";
+
 
  const categoryIconMap = {
   Temple: Landmark,
@@ -717,6 +719,7 @@ places.map((place,index)=>(
       </div>
 
     </div>
+     <Footer />
     </>
     
   );

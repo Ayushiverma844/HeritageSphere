@@ -13,6 +13,7 @@ import KnowledgeFilters from "../components/knowledgeHub/KnowledgeFilters";
 import StorySkeleton from "../components/knowledgeHub/StorySkeleton";
 import Pagination from "../components/knowledgeHub/Pagination";
 import collectionService from "../services/collectionService";
+import Footer from "../components/Footer";
 
 const coverColors = [
   "bg-gradient-to-br from-red-500 to-red-800",
@@ -309,6 +310,7 @@ const handleSaveStory = async (story) => {
           )}
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

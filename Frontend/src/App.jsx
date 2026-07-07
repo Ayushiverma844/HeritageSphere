@@ -14,6 +14,8 @@ import AdminManagePlaces from "./components/Admin/ManagePlaces";
 import AdminManageStories from "./components/Admin/ManageStories";
 import AdminManageCategories from "./components/Admin/ManageCategories";
 import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
+import NotFound from "./pages/NotFound";
+
 const App = () => {
   return (
    
@@ -56,6 +58,7 @@ const App = () => {
  
 <Routes>
   <Route path="/" element={<Home />} />
+  <Route path="/*" element={<NotFound/>} /> 
 
   <Route path="/auth" element={<Auth />} />
 
