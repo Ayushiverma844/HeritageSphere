@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 
 import storyService from "../services/storyService";
 import categoryService from "../services/categoryService";
@@ -28,8 +32,20 @@ const KnowledgeHub = () => {
   const [categories, setCategories] = useState([]);
 
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-const [search, setSearch] = useState("");
+  const location = useLocation();
+
+const [searchParams] = useSearchParams();
+
+const initialSearch =
+  searchParams.get("search") ||
+  location.state?.search ||
+  "";
+
+const [searchInput, setSearchInput] =
+  useState(initialSearch);
+
+const [search, setSearch] =
+  useState(initialSearch);
 
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +58,19 @@ const [search, setSearch] = useState("");
     hasNextPage: false,
     hasPreviousPage: false,
   });
+  
+  useEffect(() => {
+
+  if (location.state?.search !== undefined) {
+    setSearchInput(location.state.search);
+    setSearch(location.state.search);
+  }
+
+  if (location.state?.category !== undefined) {
+    setSelectedCategory(location.state.category);
+  }
+
+}, [location]);
 
   // =========================
   // Fetch Categories
@@ -99,12 +128,18 @@ useEffect(() => {
   fetchStories();
 }, [page, selectedCategory, search]);
 
-  useEffect(() => {
+ useEffect(() => {
+
   const timer = setTimeout(() => {
+
     setSearch(searchInput);
+
+    setPage(1);
+
   }, 500);
 
   return () => clearTimeout(timer);
+
 }, [searchInput]);
 
   // =========================

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import categoryService from "../../services/categoryService";
+import searchService from "../../services/searchService";
 import img from "../../assests/bg2.jpg";
 
 
@@ -89,6 +90,40 @@ const fetchCategories = async () => {
     console.log(err);
   }
 };
+
+const handleSearch = async () => {
+
+  if (!search.trim()) return;
+
+  try {
+
+    const res = await searchService.search(search);
+
+    if (res.type === "PLACE") {
+
+      navigate(
+        `/places?search=${encodeURIComponent(search)}`
+      );
+
+    } else if (res.type === "STORY") {
+
+      navigate(
+        `/knowledge-hub?search=${encodeURIComponent(search)}`
+      );
+
+    } else {
+
+      alert("No results found.");
+
+    }
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
   return (
     <section className="relative min-h-[85vh] overflow-hidden rounded-b-3xl  ">
 
@@ -129,23 +164,20 @@ const fetchCategories = async () => {
           <div className="mt-8 max-w-xl">
             <div className="bg-white rounded-2xl px-5 py-4 flex items-center justify-between shadow-2xl hover:scale-105 transition-all ease-in-out">
 
-              <input
+<input
   type="text"
   value={search}
   onChange={(e) => setSearch(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  }}
   placeholder="Search for places..."
   className="w-full outline-none text-gray-700 bg-transparent"
 />
 
-              <button
-  onClick={() => {
-    navigate("/places", {
-      state: {
-        search,
-      },
-    });
-  }}
->
+   <button onClick={handleSearch}>
                 <Search
                   size={22}
                   className="text-gray-600"

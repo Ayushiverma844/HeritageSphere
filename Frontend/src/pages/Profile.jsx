@@ -477,10 +477,14 @@ confirm_password: "",
               <Calendar size={18} />
 
               <span>
-
-                {user.date_of_birth || "Not Provided"}
-
-              </span>
+  {user.date_of_birth
+    ? new Date(user.date_of_birth).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Not Provided"}
+</span>
 
             </div>
 

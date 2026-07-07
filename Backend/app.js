@@ -14,6 +14,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
 const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
+const searchRoutes = require("./routes/searchRoutes");
 
 
 app.use(cors());
@@ -28,6 +29,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
+app.use("/api/search", searchRoutes);
 
 
 

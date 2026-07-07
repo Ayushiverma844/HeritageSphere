@@ -24,7 +24,7 @@ import {
     MapPin, 
     Bookmark
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate ,useSearchParams  } from "react-router-dom";
 
  const categoryIconMap = {
   Temple: Landmark,
@@ -59,17 +59,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 };
 
 const Explore = () => {
-
+   
  
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [searchParams] = useSearchParams();
+
+  const initialSearch =
+  searchParams.get("search") ||
+  location.state?.search ||
+  "";
+
+  const [search, setSearch] = useState(initialSearch);
+  
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
   const [places, setPlaces] = useState([]);
   const [allPlaces, setAllPlaces] = useState([]);
 const [loading, setLoading] = useState(true);
-
-const [search, setSearch] = useState("");
 
 const [selectedState, setSelectedState] = useState("");
 
@@ -132,6 +141,21 @@ useEffect(() => {
   selectedState,
   sort
 ]);
+
+useEffect(() => {
+
+  const stateSearch = location.state?.search;
+  const stateCategory = location.state?.category;
+
+  if (stateSearch !== undefined) {
+    setSearch(stateSearch);
+  }
+
+  if (stateCategory !== undefined) {
+    setSelectedCategory(stateCategory);
+  }
+
+}, [location]);
 
 
 const categories = [
