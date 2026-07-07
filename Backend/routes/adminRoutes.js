@@ -2,98 +2,122 @@ const express = require("express");
 
 const router = express.Router();
 
-const authMiddleware = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const adminController = require("../controllers/adminController");
 
-const {
-    addPlace ,
-    updatePlace ,
-    deletePlace,
+// Optional Middleware
+// const verifyToken = require("../middleware/verifyToken");
+// const isAdmin = require("../middleware/isAdmin");
 
-    createPlaceDetails,
-    updatePlaceDetails,
-    deletePlaceDetails,
+// ======================================================
+// PLACE CRUD
+// ======================================================
 
-    createStory,
-    updateStory,
-    deleteStory,
-
-} = require("../controllers/adminController");
-
-
-// Add Place
+// Create Place
 router.post(
     "/places",
-    authMiddleware,
-    adminMiddleware,
-    addPlace,
-    
+    // verifyToken,
+    // isAdmin,
+    adminController.createPlace
 );
 
 // Update Place
 router.put(
-    "/places/:id",
-    authMiddleware,
-    adminMiddleware,
-    updatePlace
+    "/places/:placeId",
+    // verifyToken,
+    // isAdmin,
+    adminController.updatePlace
 );
 
 // Delete Place
 router.delete(
-    "/places/:id",
-    authMiddleware,
-    adminMiddleware,
-    deletePlace
+    "/places/:placeId",
+    // verifyToken,
+    // isAdmin,
+    adminController.deletePlace
 );
 
-// Create Place Details
+// ======================================================
+// PLACE DETAILS CRUD
+// ======================================================
+
+// Create Details
 router.post(
     "/place-details",
-    authMiddleware,
-    adminMiddleware,
-    createPlaceDetails
+    // verifyToken,
+    // isAdmin,
+    adminController.createPlaceDetails
 );
 
-// Update Place Details
+// Update Details
 router.put(
     "/place-details/:placeId",
-    authMiddleware,
-    adminMiddleware,
-    updatePlaceDetails
+    // verifyToken,
+    // isAdmin,
+    adminController.updatePlaceDetails
 );
 
-// Delete Place Details
+// Delete Details
 router.delete(
     "/place-details/:placeId",
-    authMiddleware,
-    adminMiddleware,
-    deletePlaceDetails
+    // verifyToken,
+    // isAdmin,
+    adminController.deletePlaceDetails
 );
+
+// ======================================================
+// STORY CRUD
+// ======================================================
 
 // Create Story
 router.post(
     "/stories",
-    authMiddleware,
-    adminMiddleware,
-    createStory
+    // verifyToken,
+    // isAdmin,
+    adminController.createStory
 );
 
 // Update Story
 router.put(
     "/stories/:id",
-    authMiddleware,
-    adminMiddleware,
-    updateStory
+    // verifyToken,
+    // isAdmin,
+    adminController.updateStory
 );
 
 // Delete Story
 router.delete(
     "/stories/:id",
-    authMiddleware,
-    adminMiddleware,
-    deleteStory
+    // verifyToken,
+    // isAdmin,
+    adminController.deleteStory
 );
 
+// ======================================================
+// STORY CHAPTER CRUD
+// ======================================================
 
+// Create Chapter
+router.post(
+    "/chapters",
+    // verifyToken,
+    // isAdmin,
+    adminController.createChapter
+);
+
+// Update Chapter
+router.put(
+    "/chapters/:id",
+    // verifyToken,
+    // isAdmin,
+    adminController.updateChapter
+);
+
+// Delete Chapter
+router.delete(
+    "/chapters/:id",
+    // verifyToken,
+    // isAdmin,
+    adminController.deleteChapter
+);
 
 module.exports = router;

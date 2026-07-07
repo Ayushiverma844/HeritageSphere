@@ -1,159 +1,212 @@
 const db = require("../config/db");
 
 // ==========================================
-// Helper : Dashboard Statistics
+// Dashboard Statistics Helper
 // ==========================================
+
 const getStatistics = async () => {
+  const [
+    [users],
+    [places],
+    [stories],
+    [categories],
+    [savedItems],
+  ] = await Promise.all([
 
-    const [
-        [users],
-        [places],
-        [stories],
-        [reviews],
-        [categories],
-        [savedPlaces],
-        [todayUsers],
-        [thisMonthPlaces],
-        [avgRating]
-    ] = await Promise.all([
+    db.query(`
+      SELECT COUNT(*) AS totalUsers
+      FROM users
+    `),
 
-        db.query(`
-            SELECT COUNT(*) AS totalUsers
-            FROM users
-        `),
+    db.query(`
+      SELECT COUNT(*) AS totalPlaces
+      FROM places
+    `),
 
-        db.query(`
-            SELECT COUNT(*) AS totalPlaces
-            FROM places
-        `),
+    db.query(`
+      SELECT COUNT(*) AS totalStories
+      FROM stories
+    `),
 
-        db.query(`
-            SELECT COUNT(*) AS totalStories
-            FROM stories
-        `),
+    db.query(`
+      SELECT COUNT(*) AS totalCategories
+      FROM categories
+    `),
 
-        db.query(`
-            SELECT COUNT(*) AS totalReviews
-            FROM reviews
-        `),
+    db.query(`
+      SELECT COUNT(*) AS totalSavedItems
+      FROM saved_items
+    `)
 
-        db.query(`
-            SELECT COUNT(*) AS totalCategories
-            FROM categories
-        `),
+  ]);
 
-        db.query(`
-            SELECT COUNT(*) AS totalSavedPlaces
-            FROM saved_places
-        `),
+  return {
 
-        db.query(`
-            SELECT COUNT(*) AS todayUsers
-            FROM users
-            WHERE DATE(created_at)=CURDATE()
-        `),
+    totalUsers: users[0].totalUsers,
 
-        db.query(`
-            SELECT COUNT(*) AS thisMonthPlaces
-            FROM places
-            WHERE MONTH(created_at)=MONTH(CURDATE())
-            AND YEAR(created_at)=YEAR(CURDATE())
-        `),
+    totalPlaces: places[0].totalPlaces,
 
-        db.query(`
-            SELECT
-                ROUND(AVG(rating),1) AS averageRating
-            FROM reviews
-        `)
+    totalStories: stories[0].totalStories,
 
-    ]);
+    totalCategories: categories[0].totalCategories,
 
-    return {
+    totalSavedItems: savedItems[0].totalSavedItems
 
-        totalUsers: users[0].totalUsers,
-
-        totalPlaces: places[0].totalPlaces,
-
-        totalStories: stories[0].totalStories,
-
-        totalReviews: reviews[0].totalReviews,
-
-        totalCategories: categories[0].totalCategories,
-
-        totalSavedPlaces: savedPlaces[0].totalSavedPlaces,
-
-        todayUsers: todayUsers[0].todayUsers,
-
-        thisMonthPlaces: thisMonthPlaces[0].thisMonthPlaces,
-
-        averageRating: Number(avgRating[0].averageRating) || 0
-
-    };
-
+  };
 };
+
 
 // ==========================================
 // Dashboard Statistics API
 // ==========================================
+
 const getDashboardStats = async (req, res) => {
 
-    try {
+  try {
 
-        const statistics = await getStatistics();
+    const statistics = await getStatistics();
 
-        res.status(200).json({
+    res.status(200).json({
 
-            success: true,
+      success: true,
 
-            statistics
+      statistics
 
-        });
+    });
 
-    } catch (error) {
+  } catch (error) {
 
-        console.log(error);
+    console.log(error);
 
-        res.status(500).json({
+    res.status(500).json({
 
-            success: false,
+      success: false,
 
-            message: error.message
+      message: error.message
 
-        });
+    });
 
-    }
+  }
 
 };
 
 // ==========================================
-// Complete Dashboard API
+// Dashboard Analytics
 // ==========================================
-const getDashboard = async (req, res) => {
+
+const getDashboardAnalytics = async (req, res) => {
 
     try {
 
-        const statistics = await getStatistics();
+        // ==========================
+        // Most Saved Places
+        // ==========================
+
+        const [mostSavedPlaces] = await db.query(`
+
+            SELECT
+
+                p.place_id,
+
+                p.name,
+
+                p.city,
+
+                p.state,
+
+                p.image_url,
+
+                COUNT(si.saved_id) AS total_saves
+
+            FROM saved_items si
+
+            INNER JOIN places p
+                ON p.place_id = si.item_id
+
+            WHERE si.item_type = 'PLACE'
+
+            GROUP BY
+                p.place_id,
+                p.name,
+                p.city,
+                p.state,
+                p.image_url
+
+            ORDER BY total_saves DESC
+
+            LIMIT 5
+
+        `);
+
+        // ==========================
+        // Most Read Stories
+        // (Temporary)
+        // Replace ORDER BY when views column exists
+        // ==========================
+
+        const [mostReadStories] = await db.query(`
+
+            SELECT
+
+                story_id,
+
+                title,
+
+                slug,
+
+                cover_image,
+
+                total_chapters,
+
+                created_at
+
+            FROM stories
+
+            ORDER BY created_at DESC
+
+            LIMIT 5
+
+        `);
+
+        // ==========================
+        // Recent User Activity
+        // ==========================
+
+        const [recentUsers] = await db.query(`
+
+            SELECT
+
+                user_id,
+
+                name,
+
+                email,
+
+                city,
+
+                state,
+
+                created_at
+
+            FROM users
+
+            ORDER BY created_at DESC
+
+            LIMIT 5
+
+        `);
 
         res.status(200).json({
 
             success: true,
 
-            dashboard: {
+            analytics: {
 
-                statistics,
+                mostSavedPlaces,
 
-                summary: {
+                mostReadStories,
 
-                    totalContent:
-                        statistics.totalPlaces +
-                        statistics.totalStories,
-
-                    engagement:
-
-                        statistics.totalReviews +
-                        statistics.totalSavedPlaces
-
-                }
+                recentUsers
 
             }
 
@@ -178,27 +231,34 @@ const getDashboard = async (req, res) => {
 // ==========================================
 // Recent Users
 // ==========================================
+
 const getRecentUsers = async (req, res) => {
 
     try {
 
-        
         const page = Math.max(parseInt(req.query.page) || 1, 1);
 
-const limit = Math.min(
-    Math.max(parseInt(req.query.limit) || 5, 1),
-    100
-);
+        const limit = Math.min(
+            Math.max(parseInt(req.query.limit) || 10, 1),
+            100
+        );
+
+        const offset = (page - 1) * limit;
+
         const search = (req.query.search || "").trim();
+
         const sort =
             req.query.sort?.toUpperCase() === "ASC"
                 ? "ASC"
                 : "DESC";
 
-        const offset = (page - 1) * limit;
-
         let whereClause = "";
+
         const values = [];
+
+        // ==========================
+        // Search
+        // ==========================
 
         if (search) {
 
@@ -206,35 +266,45 @@ const limit = Math.min(
                 WHERE
                     name LIKE ?
                     OR email LIKE ?
+                    OR city LIKE ?
+                    OR state LIKE ?
             `;
 
             values.push(
+                `%${search}%`,
+                `%${search}%`,
                 `%${search}%`,
                 `%${search}%`
             );
 
         }
 
-        // =========================
-        // Total Users
-        // =========================
+        // ==========================
+        // Total Records
+        // ==========================
 
         const [countResult] = await db.query(
+
             `
             SELECT COUNT(*) AS total
+
             FROM users
+
             ${whereClause}
             `,
+
             values
+
         );
 
         const total = countResult[0].total;
 
-        // =========================
-        // Fetch Users
-        // =========================
+        // ==========================
+        // Users
+        // ==========================
 
         const [users] = await db.query(
+
             `
             SELECT
 
@@ -254,6 +324,8 @@ const limit = Math.min(
 
                 country,
 
+                profile_image,
+
                 created_at
 
             FROM users
@@ -266,16 +338,20 @@ const limit = Math.min(
 
             OFFSET ?
             `,
+
             [
                 ...values,
                 limit,
                 offset
             ]
+
         );
 
         res.status(200).json({
 
             success: true,
+
+            users,
 
             pagination: {
 
@@ -285,15 +361,13 @@ const limit = Math.min(
 
                 totalPages: Math.ceil(total / limit),
 
-                pageSize:limit,
+                pageSize: limit,
 
-                hasNextPage:page < Math.ceil(total/limit),
+                hasNextPage: page < Math.ceil(total / limit),
 
-                hasPreviousPage:page>1
+                hasPreviousPage: page > 1
 
-            },
-
-            users
+            }
 
         });
 
@@ -316,21 +390,24 @@ const limit = Math.min(
 // ==========================================
 // Recent Places
 // ==========================================
+
 const getRecentPlaces = async (req, res) => {
 
     try {
 
-        
         const page = Math.max(parseInt(req.query.page) || 1, 1);
 
-const limit = Math.min(
-    Math.max(parseInt(req.query.limit) || 5, 1),
-    100
-);
+        const limit = Math.min(
+            Math.max(parseInt(req.query.limit) || 10, 1),
+            100
+        );
+
         const offset = (page - 1) * limit;
 
         const search = (req.query.search || "").trim();
-        const category = req.query.category || "";
+
+        const category = (req.query.category || "").trim();
+
         const sort =
             req.query.sort?.toUpperCase() === "ASC"
                 ? "ASC"
@@ -340,18 +417,23 @@ const limit = Math.min(
 
         const values = [];
 
+        // ==========================
         // Search
+        // ==========================
+
         if (search) {
 
             whereClause += `
-            AND (
-                p.name LIKE ?
-                OR p.city LIKE ?
-                OR p.state LIKE ?
-            )
+                AND (
+                    p.name LIKE ?
+                    OR p.city LIKE ?
+                    OR p.state LIKE ?
+                    OR pd.short_description LIKE ?
+                )
             `;
 
             values.push(
+                `%${search}%`,
                 `%${search}%`,
                 `%${search}%`,
                 `%${search}%`
@@ -359,42 +441,52 @@ const limit = Math.min(
 
         }
 
+        // ==========================
         // Category Filter
+        // ==========================
+
         if (category) {
 
             whereClause += `
-            AND c.category_name = ?
+                AND c.category_name = ?
             `;
 
             values.push(category);
 
         }
 
-        // ============================
-        // Total Count
-        // ============================
+        // ==========================
+        // Total Records
+        // ==========================
 
         const [countResult] = await db.query(
+
             `
             SELECT COUNT(*) AS total
 
             FROM places p
 
-            JOIN categories c
-            ON p.category_id = c.category_id
+            INNER JOIN categories c
+                ON p.category_id = c.category_id
+
+            LEFT JOIN place_detail pd
+                ON p.place_id = pd.place_id
 
             ${whereClause}
             `,
+
             values
+
         );
 
         const total = countResult[0].total;
 
-        // ============================
+        // ==========================
         // Fetch Places
-        // ============================
+        // ==========================
 
         const [places] = await db.query(
+
             `
             SELECT
 
@@ -408,24 +500,25 @@ const limit = Math.min(
 
                 p.country,
 
-                p.short_description,
+                p.image_url,
+
+                p.entry_fee,
+
+                p.created_at,
 
                 c.category_name,
 
-                (
-                    SELECT image_url
-                    FROM gallery g
-                    WHERE g.place_id = p.place_id
-                    AND g.is_cover = 1
-                    LIMIT 1
-                ) AS cover_image,
+                pd.short_description,
 
-                p.created_at
+                pd.best_time_to_visit
 
             FROM places p
 
-            JOIN categories c
-            ON p.category_id = c.category_id
+            INNER JOIN categories c
+                ON p.category_id = c.category_id
+
+            LEFT JOIN place_detail pd
+                ON p.place_id = pd.place_id
 
             ${whereClause}
 
@@ -435,18 +528,21 @@ const limit = Math.min(
 
             OFFSET ?
             `,
+
             [
                 ...values,
                 limit,
                 offset
             ]
+
         );
 
         res.status(200).json({
 
             success: true,
 
-           
+            places,
+
             pagination: {
 
                 totalRecords: total,
@@ -455,15 +551,13 @@ const limit = Math.min(
 
                 totalPages: Math.ceil(total / limit),
 
-                pageSize:limit,
+                pageSize: limit,
 
-                hasNextPage:page < Math.ceil(total/limit),
+                hasNextPage: page < Math.ceil(total / limit),
 
-                hasPreviousPage:page>1
+                hasPreviousPage: page > 1
 
-            },
-
-            places
+            }
 
         });
 
@@ -482,25 +576,27 @@ const limit = Math.min(
     }
 
 };
-
 // ==========================================
 // Recent Stories
 // ==========================================
+
 const getRecentStories = async (req, res) => {
 
     try {
 
-        
         const page = Math.max(parseInt(req.query.page) || 1, 1);
 
-const limit = Math.min(
-    Math.max(parseInt(req.query.limit) || 5, 1),
-    100
-);
+        const limit = Math.min(
+            Math.max(parseInt(req.query.limit) || 10, 1),
+            100
+        );
+
         const offset = (page - 1) * limit;
 
         const search = (req.query.search || "").trim();
-        const category = req.query.category || "";
+
+        const category = (req.query.category || "").trim();
+
         const sort =
             req.query.sort?.toUpperCase() === "ASC"
                 ? "ASC"
@@ -517,11 +613,11 @@ const limit = Math.min(
         if (search) {
 
             whereClause += `
-            AND (
-                s.title LIKE ?
-                OR s.summary LIKE ?
-                OR p.name LIKE ?
-            )
+                AND (
+                    s.title LIKE ?
+                    OR s.summary LIKE ?
+                    OR p.name LIKE ?
+                )
             `;
 
             values.push(
@@ -539,7 +635,7 @@ const limit = Math.min(
         if (category) {
 
             whereClause += `
-            AND c.category_name = ?
+                AND c.category_name = ?
             `;
 
             values.push(category);
@@ -551,21 +647,23 @@ const limit = Math.min(
         // ==========================
 
         const [countResult] = await db.query(
+
             `
-            SELECT
-                COUNT(*) AS total
+            SELECT COUNT(*) AS total
 
             FROM stories s
 
-            JOIN categories c
-            ON s.category_id = c.category_id
+            INNER JOIN categories c
+                ON s.category_id = c.category_id
 
             LEFT JOIN places p
-            ON s.place_id = p.place_id
+                ON s.place_id = p.place_id
 
             ${whereClause}
             `,
+
             values
+
         );
 
         const total = countResult[0].total;
@@ -575,6 +673,7 @@ const limit = Math.min(
         // ==========================
 
         const [stories] = await db.query(
+
             `
             SELECT
 
@@ -582,7 +681,13 @@ const limit = Math.min(
 
                 s.title,
 
+                s.slug,
+
                 s.summary,
+
+                s.cover_image,
+
+                s.total_chapters,
 
                 s.source_name,
 
@@ -602,11 +707,11 @@ const limit = Math.min(
 
             FROM stories s
 
-            JOIN categories c
-            ON s.category_id = c.category_id
+            INNER JOIN categories c
+                ON s.category_id = c.category_id
 
             LEFT JOIN places p
-            ON s.place_id = p.place_id
+                ON s.place_id = p.place_id
 
             ${whereClause}
 
@@ -616,18 +721,21 @@ const limit = Math.min(
 
             OFFSET ?
             `,
+
             [
                 ...values,
                 limit,
                 offset
             ]
+
         );
 
         res.status(200).json({
 
             success: true,
 
-            
+            stories,
+
             pagination: {
 
                 totalRecords: total,
@@ -636,15 +744,13 @@ const limit = Math.min(
 
                 totalPages: Math.ceil(total / limit),
 
-                pageSize:limit,
+                pageSize: limit,
 
-                hasNextPage:page < Math.ceil(total/limit),
+                hasNextPage: page < Math.ceil(total / limit),
 
-                hasPreviousPage:page>1
+                hasPreviousPage: page > 1
 
-            },
-
-            stories
+            }
 
         });
 
@@ -663,207 +769,16 @@ const limit = Math.min(
     }
 
 };
-
-// ==========================================
-// Recent Reviews
-// ==========================================
-const getRecentReviews = async (req, res) => {
-
-    try {
-
-    
-        const page = Math.max(parseInt(req.query.page) || 1, 1);
-
-const limit = Math.min(
-    Math.max(parseInt(req.query.limit) || 5, 1),
-    100
-);
-        const offset = (page - 1) * limit;
-
-        const search = (req.query.search || "").trim();
-        const rating = parseInt(req.query.rating);
-
-if (rating && (rating < 1 || rating > 5)) {
-
-    return res.status(400).json({
-
-        success:false,
-
-        message:"Rating must be between 1 and 5"
-
-    });
-
-}
-
-        const sort =
-            req.query.sort?.toUpperCase() === "ASC"
-                ? "ASC"
-                : "DESC";
-
-        let whereClause = "WHERE 1=1";
-
-        const values = [];
-
-        // ==========================
-        // Search
-        // ==========================
-
-        if (search) {
-
-            whereClause += `
-                AND (
-                    u.name LIKE ?
-                    OR p.name LIKE ?
-                    OR r.comment LIKE ?
-                )
-            `;
-
-            values.push(
-                `%${search}%`,
-                `%${search}%`,
-                `%${search}%`
-            );
-
-        }
-
-        // ==========================
-        // Rating Filter
-        // ==========================
-
-        if (rating) {
-
-            whereClause += `
-                AND r.rating = ?
-            `;
-
-            values.push(rating);
-
-        }
-
-        // ==========================
-        // Total Records
-        // ==========================
-
-        const [countResult] = await db.query(
-            `
-            SELECT
-                COUNT(*) AS total
-
-            FROM reviews r
-
-            JOIN users u
-            ON r.user_id = u.user_id
-
-            JOIN places p
-            ON r.place_id = p.place_id
-
-            ${whereClause}
-            `,
-            values
-        );
-
-        const total = countResult[0].total;
-
-        // ==========================
-        // Reviews
-        // ==========================
-
-        const [reviews] = await db.query(
-            `
-            SELECT
-
-                r.review_id,
-
-                r.rating,
-
-                r.comment,
-
-                r.created_at,
-
-                u.user_id,
-
-                u.name AS user_name,
-
-                p.place_id,
-
-                p.name AS place_name
-
-            FROM reviews r
-
-            JOIN users u
-            ON r.user_id = u.user_id
-
-            JOIN places p
-            ON r.place_id = p.place_id
-
-            ${whereClause}
-
-            ORDER BY r.created_at ${sort}
-
-            LIMIT ?
-
-            OFFSET ?
-            `,
-            [
-                ...values,
-                limit,
-                offset
-            ]
-        );
-
-        res.status(200).json({
-
-            success: true,
-
-            
-            pagination: {
-
-                totalRecords: total,
-
-                currentPage: page,
-
-                totalPages: Math.ceil(total / limit),
-
-                pageSize:limit,
-
-                hasNextPage:page < Math.ceil(total/limit),
-
-                hasPreviousPage:page>1
-
-            },
-
-            reviews
-
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
 module.exports = {
 
     getDashboardStats,
 
-    getDashboard,
+    getDashboardAnalytics,
 
     getRecentUsers,
 
     getRecentPlaces,
 
-    getRecentStories,
-
-    getRecentReviews
+    getRecentStories
 
 };

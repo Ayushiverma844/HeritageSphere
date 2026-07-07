@@ -2,65 +2,63 @@ const express = require("express");
 
 const router = express.Router();
 
-const authMiddleware = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const adminDashboardController = require("../controllers/adminDashboardController");
 
-const {
+// Optional Middleware
+// const verifyToken = require("../middleware/verifyToken");
+// const isAdmin = require("../middleware/isAdmin");
 
-    getDashboard,
-    getDashboardStats,
-
-    getRecentUsers,
-    getRecentPlaces,
-    getRecentStories,
-    getRecentReviews
-
-} = require("../controllers/adminDashboardController");
-
-// ==========================================
+// ======================================================
 // Dashboard
-// ==========================================
+// ======================================================
 
+// Dashboard Statistics
 router.get(
-    "/dashboard/stats",
-    authMiddleware,
-    adminMiddleware,
-    getDashboardStats
+    "/stats",
+    // verifyToken,
+    // isAdmin,
+    adminDashboardController.getDashboardStats
 );
 
+// Dashboard Analytics
 router.get(
-    "/dashboard/recent-users",
-    authMiddleware,
-    adminMiddleware,
-    getRecentUsers
+    "/analytics",
+    // verifyToken,
+    // isAdmin,
+    adminDashboardController.getDashboardAnalytics
 );
 
-router.get(
-    "/dashboard/recent-places",
-    authMiddleware,
-    adminMiddleware,
-    getRecentPlaces
-);
+// ======================================================
+// Recent Users
+// ======================================================
 
 router.get(
-    "/dashboard/recent-stories",
-    authMiddleware,
-    adminMiddleware,
-    getRecentStories
+    "/users",
+    // verifyToken,
+    // isAdmin,
+    adminDashboardController.getRecentUsers
 );
 
-router.get(
-    "/dashboard/recent-reviews",
-    authMiddleware,
-    adminMiddleware,
-    getRecentReviews
-);
+// ======================================================
+// Recent Places
+// ======================================================
 
 router.get(
-    "/dashboard",
-    authMiddleware,
-    adminMiddleware,
-    getDashboard
+    "/places",
+    // verifyToken,
+    // isAdmin,
+    adminDashboardController.getRecentPlaces
+);
+
+// ======================================================
+// Recent Stories
+// ======================================================
+
+router.get(
+    "/stories",
+    // verifyToken,
+    // isAdmin,
+    adminDashboardController.getRecentStories
 );
 
 module.exports = router;
