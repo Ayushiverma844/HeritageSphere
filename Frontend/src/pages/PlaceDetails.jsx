@@ -483,6 +483,60 @@ const handleDeleteReview = async () => {
 
               )}
 
+              {/* Rituals */}
+
+{details.rituals && (
+
+<div className="mt-10">
+
+<h2 className="text-2xl font-bold mb-4">
+Rituals & Traditions
+</h2>
+
+<p className="text-gray-300 leading-8 whitespace-pre-line">
+{details.rituals}
+</p>
+
+</div>
+
+)}
+
+{/* Travel Tips */}
+
+{details.travel_tips && (
+
+<div className="mt-10">
+
+<h2 className="text-2xl font-bold mb-4">
+Travel Tips
+</h2>
+
+<p className="text-gray-300 leading-8 whitespace-pre-line">
+{details.travel_tips}
+</p>
+
+</div>
+
+)}
+
+{/* How To Reach */}
+
+{details.how_to_reach && (
+
+<div className="mt-10">
+
+<h2 className="text-2xl font-bold mb-4">
+How To Reach
+</h2>
+
+<p className="text-gray-300 leading-8 whitespace-pre-line">
+{details.how_to_reach}
+</p>
+
+</div>
+
+)}
+
               {/* Read Full Story */}
 
               {story && (
@@ -1003,80 +1057,127 @@ const handleDeleteReview = async () => {
 
             <div className="space-y-5">
 
-              <div className="flex gap-3">
+  {/* Best Time */}
 
-                <Landmark className="text-heritage-gold" />
+  <div className="flex gap-3">
 
-                <div>
+    <Clock3 className="text-heritage-gold" />
 
-                  <p className="text-sm text-gray-400">
-                    Architecture
-                  </p>
+    <div>
 
-                  <p>
-                    {details.architecture || "Not Available"}
-                  </p>
+      <p className="text-sm text-gray-400">
+        Best Time To Visit
+      </p>
 
-                </div>
+      <p>
+        {details.best_time_to_visit || "Not Available"}
+      </p>
 
-              </div>
+    </div>
 
-              <div className="flex gap-3">
+  </div>
 
-                <Clock3 className="text-heritage-gold" />
+  {/* Visiting Hours */}
 
-                <div>
+  <div className="flex gap-3">
 
-                  <p className="text-sm text-gray-400">
-                    Best Time To Visit
-                  </p>
+    <Clock3 className="text-heritage-gold" />
 
-                  <p>
-                    {details.best_time_to_visit ||
-                      "Not Available"}
-                  </p>
+    <div>
 
-                </div>
+      <p className="text-sm text-gray-400">
+        Visiting Hours
+      </p>
 
-              </div>
+      <p>
+        {details.visiting_hours || "Not Available"}
+      </p>
 
-              <div className="flex gap-3">
+    </div>
 
-                <Ticket className="text-heritage-gold" />
+  </div>
 
-                <div>
+  {/* Entry Fee */}
 
-                  <p className="text-sm text-gray-400">
-                    Entry Fee
-                  </p>
+  <div className="flex gap-3">
 
-                  <p>
-                    {place.entry_fee || "Free"}
-                  </p>
+    <Ticket className="text-heritage-gold" />
 
-                </div>
+    <div>
 
-              </div>
+      <p className="text-sm text-gray-400">
+        Entry Fee
+      </p>
 
-              <div className="flex gap-3">
+      <p>
+        {place.entry_fee || "Free"}
+      </p>
 
-                <MapPin className="text-heritage-gold" />
+    </div>
 
-                <div>
+  </div>
 
-                  <p className="text-sm text-gray-400">
-                    Location
-                  </p>
+  {/* Photography */}
 
-                  <p>
-                    {place.city}, {place.state}
-                  </p>
+  <div className="flex gap-3">
 
-                </div>
+    <BookOpen className="text-heritage-gold" />
 
-              </div>
+    <div>
 
-            </div>
+      <p className="text-sm text-gray-400">
+        Photography
+      </p>
+
+      <p>
+        {details.photography_allowed || "Not Available"}
+      </p>
+
+    </div>
+
+  </div>
+
+  {/* Dress Code */}
+
+  <div className="flex gap-3">
+
+    <Bookmark className="text-heritage-gold" />
+
+    <div>
+
+      <p className="text-sm text-gray-400">
+        Dress Code
+      </p>
+
+      <p>
+        {details.dress_code || "No Dress Code"}
+      </p>
+
+    </div>
+
+  </div>
+
+  {/* Location */}
+
+  <div className="flex gap-3">
+
+    <MapPin className="text-heritage-gold" />
+
+    <div>
+
+      <p className="text-sm text-gray-400">
+        Location
+      </p>
+
+      <p>
+        {place.city}, {place.state}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
 
             <div className="mt-8 space-y-3">
 
