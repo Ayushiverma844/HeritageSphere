@@ -1,8 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { MapPin, BookOpen } from "lucide-react";
+import { MapPin, BookOpen ,Bookmark} from "lucide-react";
 
-const StoryBookCard = ({ story, coverColor }) => {
+const StoryBookCard = ({
+  story,
+  coverColor,
+  isSaved,
+  onSave,
+}) => {
   return (
     <Link
       to={`/stories/${story.slug}`}
@@ -25,6 +30,41 @@ const StoryBookCard = ({ story, coverColor }) => {
         group-hover:scale-[1.02]
       "
       >
+        <button
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSave(story);
+  }}
+  className="
+  absolute
+  right-0.5
+  top-0.5
+  z-50
+  h-9
+  w-9
+  rounded-full
+  bg-black/60
+  backdrop-blur-md
+  border
+  border-heritage-gold/20
+  flex
+  items-center
+  justify-center
+  hover:scale-110
+  transition
+  cursor-pointer
+  "
+>
+  <Bookmark
+    size={16}
+    className={
+      isSaved
+        ? "text-heritage-gold fill-heritage-gold"
+        : "text-white"
+    }
+  />
+</button>
         {/* ================= BOOK COVER ================= */}
 
         <div

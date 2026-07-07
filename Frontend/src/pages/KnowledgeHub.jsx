@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft , Bookmark, } from "lucide-react";
 import {
   Link,
   useLocation,
@@ -8,11 +8,11 @@ import {
 
 import storyService from "../services/storyService";
 import categoryService from "../services/categoryService";
-
 import StoryBookCard from "../components/knowledgeHub/StoryBookCard";
 import KnowledgeFilters from "../components/knowledgeHub/KnowledgeFilters";
 import StorySkeleton from "../components/knowledgeHub/StorySkeleton";
 import Pagination from "../components/knowledgeHub/Pagination";
+import collectionService from "../services/collectionService";
 
 const coverColors = [
   "bg-gradient-to-br from-red-500 to-red-800",
@@ -58,6 +58,8 @@ const [search, setSearch] =
     hasNextPage: false,
     hasPreviousPage: false,
   });
+
+  const [savedStories, setSavedStories] = useState([]);
   
   useEffect(() => {
 
@@ -124,6 +126,10 @@ const [search, setSearch] =
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+  fetchSavedStories();
+}, []);
+
 useEffect(() => {
   fetchStories();
 }, [page, selectedCategory, search]);
@@ -141,6 +147,62 @@ useEffect(() => {
   return () => clearTimeout(timer);
 
 }, [searchInput]);
+
+
+const fetchSavedStories = async () => {
+  try {
+
+    const res =
+      await collectionService.getMyCollection();
+
+    const ids = (res.stories || []).map(
+      (story) => story.story_id
+    );
+
+    setSavedStories(ids);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleSaveStory = async (story) => {
+  try {
+
+    const isSaved =
+      savedStories.includes(story.story_id);
+
+    if (isSaved) {
+
+      await collectionService.removeItem(
+        "STORY",
+        story.story_id
+      );
+
+      setSavedStories((prev) =>
+        prev.filter(
+          (id) => id !== story.story_id
+        )
+      );
+
+    } else {
+
+      await collectionService.saveItem(
+        "STORY",
+        story.story_id
+      );
+
+      setSavedStories((prev) => [
+        ...prev,
+        story.story_id,
+      ]);
+
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   // =========================
   // Pagination Handler
@@ -227,13 +289,15 @@ useEffect(() => {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-x-2 gap-y-16">
                 {stories.map((story, index) => (
-                  <StoryBookCard
-                    key={story.story_id}
-                    story={story}
-                    coverColor={
-                      coverColors[index % coverColors.length]
-                    }
-                  />
+                 <StoryBookCard
+  key={story.story_id}
+  story={story}
+  coverColor={
+    coverColors[index % coverColors.length]
+  }
+  isSaved={savedStories.includes(story.story_id)}
+  onSave={handleSaveStory}
+/>
                 ))}
               </div>
 

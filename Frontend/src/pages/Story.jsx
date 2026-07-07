@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen ,  Bookmark, } from "lucide-react";
 
 import StorySidebar from "../components/story/StorySidebar";
 import StoryBook from "../components/story/StoryBook";
 import ChapterNavigation from "../components/story/ChapterNavigation";
 
 import storyService from "../services/storyService";
+import collectionService from "../services/collectionService";
 
 const Story = () => {
   const { slug } = useParams();
@@ -15,6 +16,7 @@ const Story = () => {
   const [chapters, setChapters] = useState([]);
   const [currentChapter, setCurrentChapter] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
   window.scrollTo({
@@ -25,6 +27,16 @@ const Story = () => {
   useEffect(() => {
     fetchStory();
   }, [slug]);
+
+  useEffect(() => {
+
+  if (story) {
+
+    fetchSavedStatus();
+
+  }
+
+}, [story]);
 
   const fetchStory = async () => {
     try {
@@ -42,6 +54,56 @@ const Story = () => {
       setLoading(false);
     }
   };
+
+  const fetchSavedStatus = async () => {
+  try {
+
+    const res =
+      await collectionService.getMyCollection();
+
+    const saved = (res.stories || []).some(
+      (item) =>
+        item.story_id === story.story_id
+    );
+
+    setIsSaved(saved);
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+};
+
+const handleSave = async () => {
+  try {
+
+    if (isSaved) {
+
+      await collectionService.removeItem(
+        "STORY",
+        story.story_id
+      );
+
+      setIsSaved(false);
+
+    } else {
+
+      await collectionService.saveItem(
+        "STORY",
+        story.story_id
+      );
+
+      setIsSaved(true);
+
+    }
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+};
 
   if (loading) {
     return (
@@ -91,7 +153,39 @@ const Story = () => {
 
         {/* Header */}
 
-        <div className="text-center mt-10 mb-12">
+        <div className="relative text-center mt-10 mb-12">
+          <button
+  onClick={handleSave}
+  className="
+  absolute
+  right-0
+  top-0
+  h-15
+  w-15
+  rounded-full
+  bg-white/5
+  border
+  border-heritage-gold/20
+  backdrop-blur-md
+  flex
+  items-center
+  justify-center
+  hover:scale-110
+  hover:border-heritage-gold
+  transition-all
+  duration-300
+  cursor-pointer
+  "
+>
+  <Bookmark
+    size={25}
+    className={
+      isSaved
+        ? "text-heritage-gold fill-heritage-gold"
+        : "text-white"
+    }
+  />
+</button>
 
           <div
             className="
