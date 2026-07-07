@@ -40,7 +40,7 @@ const EpicTales = () => {
 
   return (
 
-    <section className="max-w-7xl mx-auto px-5 py-10">
+    <section className="max-w-7xl mx-auto px-5 py-10 mb-8">
 
       {/* Heading */}
 
