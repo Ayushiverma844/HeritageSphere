@@ -8,19 +8,20 @@ const StorySidebar = ({
   return (
     <div
       className="
+      sticky
+      top-28
+      h-[82vh]
+      flex
+      flex-col
       bg-white/5
       backdrop-blur-xl
       border
       border-white/10
       rounded-3xl
-      p-6
-      h-fit
-      sticky
-      top-28
       overflow-hidden
       "
     >
-      {/* Top Glow */}
+      {/* Gold Glow */}
 
       <div
         className="
@@ -28,7 +29,7 @@ const StorySidebar = ({
         top-0
         left-0
         w-full
-        h-20
+        h-24
         bg-linear-to-b
         from-heritage-gold/10
         to-transparent
@@ -36,40 +37,57 @@ const StorySidebar = ({
         "
       />
 
-      {/* Heading */}
+      {/* Header */}
 
-      <div className="flex items-center gap-3 mb-8 relative z-10">
-        <div
-          className="
-          h-10
-          w-10
-          rounded-xl
-          bg-heritage-gold/15
-          flex
-          items-center
-          justify-center
-          "
-        >
-          <BookMarked
-            size={20}
-            className="text-heritage-gold"
-          />
+      <div className="relative z-10 p-6 border-b border-white/10">
+
+        <div className="flex items-center gap-3">
+
+          <div
+            className="
+            h-12
+            w-12
+            rounded-2xl
+            bg-heritage-gold/15
+            flex
+            items-center
+            justify-center
+            "
+          >
+            <BookMarked
+              size={22}
+              className="text-heritage-gold"
+            />
+          </div>
+
+          <div>
+
+            <h3 className="text-xl font-bold text-heritage-gold">
+              Chapters
+            </h3>
+
+            <p className="text-sm text-gray-400">
+              {chapters.length} Chapters
+            </p>
+
+          </div>
+
         </div>
 
-        <div>
-          <h3 className="text-xl font-semibold text-heritage-gold">
-            Chapters
-          </h3>
-
-          <p className="text-xs text-gray-400">
-            {chapters.length} Chapters Available
-          </p>
-        </div>
       </div>
+            {/* Chapter List */}
 
-      {/* Chapter List */}
-
-      <div className="space-y-3">
+      <div
+        className="
+        flex-1
+        overflow-y-auto
+        p-4
+        space-y-3
+        scrollbar-thin
+        scrollbar-thumb-heritage-gold/30
+        scrollbar-track-transparent
+        "
+      >
 
         {chapters.map((chapter, index) => (
 
@@ -77,16 +95,13 @@ const StorySidebar = ({
             key={chapter.chapter_id}
             onClick={() => setCurrentChapter(index)}
             className={`
-              group
-              relative
               w-full
-              text-left
-              px-4
-              py-4
               rounded-2xl
               border
+              text-left
               transition-all
               duration-300
+              p-4
 
               ${
                 currentChapter === index
@@ -94,61 +109,70 @@ const StorySidebar = ({
                     bg-heritage-gold
                     text-black
                     border-heritage-gold
+                    shadow-lg
+                    scale-[1.02]
                   `
                   : `
                     bg-white/3
+                    border-white/10
                     text-gray-300
-                    border-white/5
-                    hover:border-heritage-gold/40
                     hover:bg-white/10
+                    hover:border-heritage-gold/40
+                    hover:translate-x-1
                   `
               }
             `}
           >
 
-            <div className="flex items-center gap-4">
+            <div className="flex gap-4 items-start">
 
-              {/* Chapter Number */}
+              {/* Number */}
 
               <div
                 className={`
-                h-9
-                w-9
-                rounded-full
-                flex
-                items-center
-                justify-center
-                text-sm
-                font-semibold
-
-                ${
-                  currentChapter === index
-                    ? "bg-black/15"
-                    : "bg-white/10"
-                }
-                `}
-              >
-                {String(chapter.chapter_number).padStart(2, "0")}
-              </div>
-
-              {/* Chapter Name */}
-
-              <div>
-
-                <p className="font-medium">
-                  {chapter.title}
-                </p>
-
-                <p
-                  className={`
-                  text-xs mt-1
+                  flex
+                  items-center
+                  justify-center
+                  h-10
+                  w-10
+                  rounded-full
+                  font-bold
+                  text-sm
+                  shrink-0
 
                   ${
                     currentChapter === index
+                      ? "bg-black/15"
+                      : "bg-white/10"
+                  }
+                `}
+              >
+
+                {String(
+                  chapter.chapter_number
+                ).padStart(2, "0")}
+
+              </div>
+
+              {/* Title */}
+
+              <div className="min-w-0 flex-1">
+
+                <h4
+                  className="
+                  font-semibold
+                  truncate
+                  "
+                >
+                  {chapter.title}
+                </h4>
+
+                <p
+                  className={`text-xs mt-1 ${
+                    currentChapter === index
                       ? "text-black/70"
                       : "text-gray-500"
-                  }
-                  `}
+                  }`}
                 >
                   Chapter {chapter.chapter_number}
                 </p>
@@ -162,20 +186,68 @@ const StorySidebar = ({
         ))}
 
       </div>
-
-      {/* Bottom */}
+            {/* Footer */}
 
       <div
         className="
-        mt-8
-        pt-6
         border-t
         border-white/10
+        bg-white/2
+        p-3
         "
       >
-        <p className="text-xs text-center text-gray-500">
-          Ancient Indian Epic
-        </p>
+
+        {/* Reading Progress */}
+
+        <div className="mb-2">
+
+          <div className="flex justify-between text-xs text-gray-400 mb-2">
+
+            <span>Reading Progress</span>
+
+            <span>
+              {currentChapter + 1} / {chapters.length}
+            </span>
+
+          </div>
+
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+
+            <div
+              className="
+              h-full
+              bg-heritage-gold
+              rounded-full
+              transition-all
+              duration-500
+              "
+              style={{
+                width: `${
+                  ((currentChapter + 1) /
+                    chapters.length) *
+                  100
+                }%`,
+              }}
+            />
+
+          </div>
+
+        </div>
+
+        {/* Current Chapter */}
+
+        <div className="text-center">
+
+          <p className="text-xs uppercase tracking-widest text-gray-500">
+            Currently Reading
+          </p>
+
+          <h4 className="mt-2 text-sm font-semibold text-heritage-gold line-clamp-2">
+            {chapters[currentChapter]?.title}
+          </h4>
+
+        </div>
+
       </div>
 
     </div>
