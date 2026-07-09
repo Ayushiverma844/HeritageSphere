@@ -24,7 +24,7 @@ const StoryBook = ({ story, chapter }) => {
 
   const splitIntoPages = (
     text,
-    wordsPerPage = 180
+    wordsPerPage = 185
   ) => {
 
     if (!text) return [];
@@ -149,8 +149,8 @@ const StoryBook = ({ story, chapter }) => {
           from-[#f7ecd2]
           to-[#ead8b5]
           text-[#2b1c0d]
-          px-5
-          py-4
+          px-8
+          py-8
           border-r
           border-black/10
           "
@@ -160,7 +160,7 @@ const StoryBook = ({ story, chapter }) => {
 
           <div>
 
-            <h1 className="text-4xl md:text-5xl font-serif leading-tight">
+            <h1 className="text-3xl md:text-4xl font-serif leading-tight mt-2">
 
               {story.title}
 
@@ -187,7 +187,7 @@ const StoryBook = ({ story, chapter }) => {
             <div
               className="
               story-content
-              text-[16px]
+              text-[15px]
               leading-6
               whitespace-pre-line
               text-justify
@@ -288,13 +288,13 @@ const StoryBook = ({ story, chapter }) => {
           left-1/2
           top-0
           h-full
-          w-10
+          w-8
           -translate-x-1/2
           z-20
           pointer-events-none
           bg-linear-to-r
           from-black/10
-          via-black/30
+          via-black/25
           to-black/10
           "
         />
