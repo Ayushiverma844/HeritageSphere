@@ -10,6 +10,7 @@ import {
   X,
   Plus,
   Trash2,
+  Pencil,
 } from "lucide-react";
 
 import api from "../../api/api";
@@ -33,6 +34,9 @@ const ManageCategories = ({ onClose }) => {
 
   const [saving, setSaving] =
     useState(false);
+  
+  const [editingCategory, setEditingCategory] =
+    useState(null);
 
   // ======================
   // Fetch Categories
@@ -189,6 +193,80 @@ const ManageCategories = ({ onClose }) => {
 
   };
 
+  // update 
+
+  const handleUpdateCategory = async () => {
+
+  if (!newCategory.trim()) {
+
+    toast.error("Category name is required.");
+
+    return;
+
+  }
+
+  try {
+
+    setSaving(true);
+
+    const res = await api.put(
+
+      `/categories/${editingCategory.category_id}`,
+
+      {
+
+        category_name: newCategory.trim(),
+
+        usage_type: usageType
+
+      }
+
+    );
+
+    if (res.data.success) {
+
+      toast.success(res.data.message);
+
+      fetchCategories();
+
+      setEditingCategory(null);
+
+      setNewCategory("");
+
+      setUsageType(
+
+        activeTab === "place"
+
+          ? "PLACE"
+
+          : "STORY"
+
+      );
+
+    }
+
+  }
+
+  catch (error) {
+
+    toast.error(
+
+      error.response?.data?.message ||
+
+      "Unable to update category."
+
+    );
+
+  }
+
+  finally {
+
+    setSaving(false);
+
+  }
+
+};
+
   // ======================
   // Delete Category
   // ======================
@@ -240,6 +318,17 @@ const ManageCategories = ({ onClose }) => {
     }
 
   };
+
+  // edit category
+  const handleEditCategory = (category) => {
+
+  setEditingCategory(category);
+
+  setNewCategory(category.category_name);
+
+  setUsageType(category.usage_type);
+
+};
 
   return (
 
@@ -300,13 +389,17 @@ shadow-[0_20px_80px_rgba(0,0,0,0.55)]
         <div className="flex gap-3 px-8 pt-6">
 
           <button
-            onClick={() => {
+           onClick={() => {
 
-              setActiveTab("place");
+  setEditingCategory(null);
 
-              setUsageType("PLACE");
+  setNewCategory("");
 
-            }}
+  setActiveTab("place");
+
+  setUsageType("PLACE");
+
+}}
             className={`px-5 py-2 rounded-xl transition ${
               activeTab === "place"
                 ? "bg-heritage-gold text-black"
@@ -319,11 +412,15 @@ shadow-[0_20px_80px_rgba(0,0,0,0.55)]
           <button
             onClick={() => {
 
-              setActiveTab("story");
+  setEditingCategory(null);
 
-              setUsageType("STORY");
+  setNewCategory("");
 
-            }}
+  setActiveTab("story");
+
+  setUsageType("STORY");
+
+}}
             className={`px-5 py-2 rounded-xl transition ${
               activeTab === "story"
                 ? "bg-heritage-gold text-black"
@@ -344,6 +441,25 @@ shadow-[0_20px_80px_rgba(0,0,0,0.55)]
           <div className="lg:col-span-2">
 
             {/* Add Category */}
+            {editingCategory && (
+
+  <div className="mb-4">
+
+    <p className="text-heritage-gold font-medium">
+
+      Editing Category :
+
+      <span className="ml-2 text-white">
+
+        {editingCategory.category_name}
+
+      </span>
+
+    </p>
+
+  </div>
+
+)}
 
             <div className="flex gap-3 mb-8">
 
@@ -352,11 +468,15 @@ shadow-[0_20px_80px_rgba(0,0,0,0.55)]
                 onChange={(e) =>
                   setNewCategory(e.target.value)
                 }
-                placeholder={`New ${
-                  activeTab === "place"
-                    ? "Place"
-                    : "Story"
-                } Category`}
+               placeholder={
+editingCategory
+? "Update Category"
+: `New ${
+activeTab==="place"
+? "Place"
+: "Story"
+} Category`
+}
                 className="
 flex-1
 rounded-xl
@@ -407,24 +527,67 @@ focus:ring-heritage-gold/20"
               </select>
 
               <button
-                disabled={saving}
-                onClick={handleAddCategory}
-                className="
+disabled={saving}
+onClick={
+editingCategory
+? handleUpdateCategory
+: handleAddCategory
+}
+                className={`
 px-6
 rounded-xl
-bg-linear-to-r
-from-yellow-400
-to-amber-500
-text-black
 font-semibold
-hover:scale-105
 transition
-shadow-lg
-shadow-yellow-500/20
-disabled:opacity-60"
+
+${
+editingCategory
+
+? "bg-blue-600 hover:bg-blue-700 text-white"
+
+: "bg-linear-to-r from-yellow-400 to-amber-500 text-black"
+}
+`}
               >
-                <Plus size={18} />
+               {editingCategory ? "Update" : "Add"}
               </button>
+              {editingCategory && (
+
+<button
+
+onClick={() => {
+
+setEditingCategory(null);
+
+setNewCategory("");
+
+setUsageType(
+
+activeTab === "place"
+
+? "PLACE"
+
+: "STORY"
+
+);
+
+}}
+
+className="
+px-5
+rounded-xl
+bg-gray-700
+hover:bg-gray-600
+"
+
+>
+
+Cancel
+
+</button>
+
+)}
+
+              
 
             </div>
 
@@ -474,23 +637,53 @@ transition"
 
                     </div>
 
-                    <button
-                      onClick={() =>
-                        handleDeleteCategory(
-                          cat.category_id
-                        )
-                      }
-                      className="
+                   <div className="flex gap-2">
+
+<button
+
+onClick={() => handleEditCategory(cat)}
+
+className="
+p-2
+rounded-lg
+bg-blue-500/10
+text-blue-400
+hover:bg-blue-500
+hover:text-white
+transition
+"
+
+>
+
+<Pencil size={17} />
+
+</button>
+
+<button
+
+onClick={() =>
+handleDeleteCategory(
+cat.category_id
+)
+}
+
+className="
 p-2
 rounded-lg
 bg-red-500/10
 text-red-400
 hover:bg-red-500
 hover:text-white
-transition"
-                    >
-                      <Trash2 size={17} />
-                    </button>
+transition
+"
+
+>
+
+<Trash2 size={17} />
+
+</button>
+
+</div>
 
                   </div>
 
