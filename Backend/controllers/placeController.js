@@ -474,68 +474,68 @@ const getAllPlaces = async (req, res) => {
 // ==========================
 
 const getAllPlacesAdmin = async (req, res) => {
-
   try {
-
     let {
-
       page = 1,
       limit = 30,
-      search,
-      category,
-      sort = "newest"
-
+      search = "",
+      category = "",
+      sort = "newest",
     } = req.query;
 
-    page = parseInt(page);
-    limit = parseInt(limit);
+    // ==========================
+    // Pagination
+    // ==========================
 
-    if (page < 1) page = 1;
-    if (limit < 1) limit = 10;
+    page = Number(page);
+    limit = Number(limit);
+
+    if (!Number.isInteger(page) || page < 1) {
+      page = 1;
+    }
+
+    if (!Number.isInteger(limit) || limit < 1) {
+      limit = 30;
+    }
 
     const offset = (page - 1) * limit;
 
+    // ==========================
+    // Base Query
+    // ==========================
+
     let query = `
       SELECT
-
         p.place_id,
         p.name,
         p.city,
         p.state,
         p.country,
-
         p.image_url,
         p.entry_fee,
-
         c.category_name,
-
         p.created_at
-
       FROM places p
-
       JOIN categories c
-      ON p.category_id = c.category_id
-
+        ON p.category_id = c.category_id
       WHERE 1 = 1
     `;
 
     let countQuery = `
       SELECT COUNT(*) AS total
-
       FROM places p
-
       JOIN categories c
-      ON p.category_id = c.category_id
-
+        ON p.category_id = c.category_id
       WHERE 1 = 1
     `;
 
     const values = [];
 
+    // ==========================
     // Search
+    // ==========================
 
-    if (search) {
-
+    if (search.trim()) {
       query += `
         AND (
           p.name LIKE ?
@@ -552,111 +552,84 @@ const getAllPlacesAdmin = async (req, res) => {
         )
       `;
 
-      values.push(
+      const keyword = `%${search.trim()}%`;
 
-        `%${search}%`,
-        `%${search}%`,
-        `%${search}%`
-
-      );
-
+      values.push(keyword, keyword, keyword);
     }
 
+    // ==========================
     // Category
+    // ==========================
 
     if (category) {
-
       query += ` AND p.category_id = ? `;
       countQuery += ` AND p.category_id = ? `;
 
       values.push(category);
-
     }
 
+    // ==========================
     // Sorting
+    // ==========================
 
     switch (sort) {
-
       case "oldest":
-
         query += ` ORDER BY p.created_at ASC`;
-
         break;
 
       case "name":
-
         query += ` ORDER BY p.name ASC`;
-
         break;
 
       default:
-
         query += ` ORDER BY p.created_at DESC`;
-
+        break;
     }
+
+    // ==========================
+    // Pagination
+    // ==========================
 
     query += ` LIMIT ? OFFSET ?`;
 
     const [places] = await db.query(
-
       query,
-
       [...values, limit, offset]
-
     );
 
-    const [count] = await db.query(
-
+    const [countResult] = await db.query(
       countQuery,
-
       values
-
     );
 
-    const totalPlaces = count[0].total;
+    const totalPlaces = Number(countResult[0].total);
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalPlaces / limit)
+    );
 
-    res.status(200).json({
-
+    return res.status(200).json({
       success: true,
 
       pagination: {
-
         currentPage: page,
-
-        totalPages: Math.ceil(totalPlaces / limit),
-
+        totalPages,
         totalPlaces,
-
         limit,
-
-        hasNextPage:
-          page < Math.ceil(totalPlaces / limit),
-
-        hasPreviousPage:
-          page > 1
-
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
 
-      places
-
+      places,
     });
+  } catch (error) {
+    console.error(error);
 
-  }
-
-  catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-
+    return res.status(500).json({
       success: false,
-
-      message: error.message
-
+      message: error.message,
     });
-
   }
-
 };
 // ==========================
 // Get Place By Id (Admin)

@@ -770,6 +770,7 @@ useEffect(() => {
           py-3
           rounded-xl
           transition
+          cursor-pointer
 
           ${
             activeTab === "add"
@@ -800,6 +801,7 @@ useEffect(() => {
           py-3
           rounded-xl
           transition
+          cursor-pointer
 
           ${
             activeTab === "manage"
@@ -1410,7 +1412,7 @@ useEffect(() => {
 
             <div>
 
-              <label className="block mb-2">
+              <label className="block mb-2 ">
 
                 Photography Allowed
 
@@ -1424,7 +1426,7 @@ useEffect(() => {
 
                 onChange={handleChange}
 
-                className="w-full rounded-xl bg-[#111827] border border-white/10 px-4 py-3"
+                className="w-full rounded-xl bg-[#111827] border border-white/10 px-4 py-3 cursor-pointer"
 
               >
 
@@ -1604,7 +1606,7 @@ useEffect(() => {
              <button
   onClick={handleSubmit}
   disabled={saving}
-  className="w-full bg-yellow-500 text-black py-3 rounded-xl font-semibold flex justify-center items-center gap-2 disabled:opacity-60"
+  className="w-full bg-yellow-500 text-black py-3 rounded-xl font-semibold flex justify-center items-center gap-2 cursor-pointer disabled:opacity-60"
 >
 
                 <Save size={18} />
@@ -1619,7 +1621,7 @@ useEffect(() => {
 
                   onClick={resetForm}
 
-                  className="w-full mt-3 py-3 rounded-xl bg-red-500 hover:bg-red-600 transition"
+                  className="w-full mt-3 py-3 rounded-xl bg-red-500 cursor-pointer hover:bg-red-700 transition"
 
                 >
 
@@ -1727,7 +1729,7 @@ useEffect(() => {
                     onClick={() =>
                       handleEdit(place.place_id)
                     }
-                    className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition"
+                    className="flex-1 py-2 rounded-xl bg-blue-600 cursor-pointer hover:bg-blue-700 transition"
                   >
                     Edit
                   </button>
@@ -1736,7 +1738,7 @@ useEffect(() => {
                     onClick={() =>
                       handleDelete(place.place_id)
                     }
-                    className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 transition"
+                    className="flex-1 py-2 rounded-xl bg-red-600 cursor-pointer hover:bg-red-700 transition"
                   >
                     Delete
                   </button>
