@@ -1,68 +1,250 @@
-import React, { useState } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import toast from "react-hot-toast";
+
+import {
+  X,
+  Plus,
+  Trash2,
+} from "lucide-react";
+
+import api from "../../api/api";
 
 const ManageCategories = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState("place");
 
-  const [newCategory, setNewCategory] = useState("");
+  const [activeTab, setActiveTab] =
+    useState("place");
 
-  const [placeCategories, setPlaceCategories] = useState([
-    "Monument",
-    "Temple",
-    "Fort",
-    "Palace",
-    "Museum",
-    "UNESCO Site",
-  ]);
+  const [newCategory, setNewCategory] =
+    useState("");
 
-  const [storyCategories, setStoryCategories] = useState([
-    "History",
-    "Mythology",
-    "Culture",
-    "Freedom Struggle",
-    "Legends",
-  ]);
+  const [usageType, setUsageType] =
+    useState("PLACE");
+
+  const [categories, setCategories] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  // ======================
+  // Fetch Categories
+  // ======================
+
+  const fetchCategories = async () => {
+
+    try {
+
+      setLoading(true);
+
+      const res = await api.get(
+        "/categories",
+        {
+          params: {
+            limit: 100,
+          },
+        }
+      );
+
+      if (res.data.success) {
+
+        setCategories(
+          res.data.categories || []
+        );
+
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to load categories."
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  useEffect(() => {
+
+    fetchCategories();
+
+  }, []);
+
+ 
+   // ======================
+  // Filter Categories
+  // ======================
+
+  const placeCategories = useMemo(() => {
+
+    return categories.filter(
+
+      (cat) =>
+        cat.usage_type === "PLACE" ||
+        cat.usage_type === "BOTH"
+
+    );
+
+  }, [categories]);
+
+  const storyCategories = useMemo(() => {
+
+    return categories.filter(
+
+      (cat) =>
+        cat.usage_type === "STORY" ||
+        cat.usage_type === "BOTH"
+
+    );
+
+  }, [categories]);
 
   // ======================
   // Add Category
   // ======================
 
-  const handleAddCategory = () => {
-    if (!newCategory.trim()) return;
+  const handleAddCategory = async () => {
 
-    if (activeTab === "place") {
-      setPlaceCategories((prev) => [
-        ...prev,
-        newCategory.trim(),
-      ]);
-    } else {
-      setStoryCategories((prev) => [
-        ...prev,
-        newCategory.trim(),
-      ]);
+    if (!newCategory.trim()) {
+
+      toast.error("Category name is required.");
+
+      return;
+
     }
 
-    setNewCategory("");
+    try {
+
+      setSaving(true);
+
+      const res = await api.post(
+
+        "/categories",
+
+        {
+
+          category_name: newCategory.trim(),
+
+          usage_type: usageType
+
+        }
+
+      );
+
+      if (res.data.success) {
+
+        toast.success(res.data.message);
+
+        setNewCategory("");
+
+        setUsageType(
+
+          activeTab === "place"
+
+            ? "PLACE"
+
+            : "STORY"
+
+        );
+
+        fetchCategories();
+
+      }
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+
+      toast.error(
+
+        error.response?.data?.message ||
+
+        "Unable to create category."
+
+      );
+
+    }
+
+    finally {
+
+      setSaving(false);
+
+    }
+
   };
 
   // ======================
   // Delete Category
   // ======================
 
-  const handleDeleteCategory = (index) => {
-    if (activeTab === "place") {
-      setPlaceCategories((prev) =>
-        prev.filter((_, i) => i !== index)
+  const handleDeleteCategory = async (
+
+    categoryId
+
+  ) => {
+
+    const confirmDelete = window.confirm(
+
+      "Delete this category?"
+
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      const res = await api.delete(
+
+        `/categories/${categoryId}`
+
       );
-    } else {
-      setStoryCategories((prev) =>
-        prev.filter((_, i) => i !== index)
-      );
+
+      if (res.data.success) {
+
+        toast.success(res.data.message);
+
+        fetchCategories();
+
+      }
+
     }
+
+    catch (error) {
+
+      console.log(error);
+
+      toast.error(
+
+        error.response?.data?.message ||
+
+        "Unable to delete category."
+
+      );
+
+    }
+
   };
 
   return (
-    <div className="
+
+    <div
+      className="
 fixed
 inset-0
 z-50
@@ -73,26 +255,26 @@ items-center
 justify-center
 px-8
 py-10
+"
+    >
 
-">
+          <div
+        className="
+w-full
+max-w-6xl
+max-h-[90vh]
+overflow-y-auto
+hide-scrollbar
+rounded-4xl
+border
+border-white/10
+bg-[#0A101C]/95
+backdrop-blur-2xl
+shadow-[0_20px_80px_rgba(0,0,0,0.55)]
+"
+      >
 
-      <div
-  className="
-  w-full
-  max-w-6xl
-  max-h-[90vh]
-  overflow-y-auto
-  hide-scrollbar
-  rounded-4xl
-  border
-  border-white/10
-  bg-[#0A101C]/95
-  backdrop-blur-2xl
-  shadow-[0_20px_80px_rgba(0,0,0,0.55)]
-  "
->
-
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
 
         <div className="flex justify-between items-center px-8 py-6 border-b border-white/5">
 
@@ -101,8 +283,6 @@ py-10
             <h2 className="text-3xl font-bold text-white">
               Manage Categories
             </h2>
-
-           
 
           </div>
 
@@ -115,12 +295,18 @@ py-10
 
         </div>
 
-        {/* TABS */}
+        {/* ================= Tabs ================= */}
 
         <div className="flex gap-3 px-8 pt-6">
 
           <button
-            onClick={() => setActiveTab("place")}
+            onClick={() => {
+
+              setActiveTab("place");
+
+              setUsageType("PLACE");
+
+            }}
             className={`px-5 py-2 rounded-xl transition ${
               activeTab === "place"
                 ? "bg-heritage-gold text-black"
@@ -131,11 +317,17 @@ py-10
           </button>
 
           <button
-            onClick={() => setActiveTab("story")}
+            onClick={() => {
+
+              setActiveTab("story");
+
+              setUsageType("STORY");
+
+            }}
             className={`px-5 py-2 rounded-xl transition ${
               activeTab === "story"
                 ? "bg-heritage-gold text-black"
-                : "bg-white/10 text-gray-300"
+                : "bg-[#141D2B] text-gray-300"
             }`}
           >
             Story Categories
@@ -143,13 +335,15 @@ py-10
 
         </div>
 
-        {/* BODY */}
+        {/* ================= BODY ================= */}
 
         <div className="grid lg:grid-cols-3 gap-8 p-8">
 
-          {/* LEFT */}
+          {/* ================= LEFT ================= */}
 
           <div className="lg:col-span-2">
+
+            {/* Add Category */}
 
             <div className="flex gap-3 mb-8">
 
@@ -163,80 +357,165 @@ py-10
                     ? "Place"
                     : "Story"
                 } Category`}
-                className="flex-1 rounded-xl bg-[#141D2B] border border-white/10 px-4 py-3 outline-none text-white 
+                className="
+flex-1
+rounded-xl
+bg-[#141D2B]
+border
+border-white/10
+px-4
+py-3
+outline-none
+text-white
 focus:border-heritage-gold
 focus:ring-2
 focus:ring-heritage-gold/20"
               />
 
+              <select
+                value={usageType}
+                onChange={(e) =>
+                  setUsageType(e.target.value)
+                }
+                className="
+w-44
+rounded-xl
+bg-[#141D2B]
+border
+border-white/10
+px-4
+py-3
+text-white
+outline-none
+focus:border-heritage-gold
+focus:ring-2
+focus:ring-heritage-gold/20"
+              >
+
+                <option value="PLACE">
+                  Place
+                </option>
+
+                <option value="STORY">
+                  Story
+                </option>
+
+                <option value="BOTH">
+                  Both
+                </option>
+
+              </select>
+
               <button
+                disabled={saving}
                 onClick={handleAddCategory}
-                className="px-6 rounded-xl bg-heritage-gold text-black font-semibold hover:scale-105 transition bg-linear-to-r
+                className="
+px-6
+rounded-xl
+bg-linear-to-r
 from-yellow-400
 to-amber-500
-hover:from-yellow-300
-hover:to-amber-400
+text-black
+font-semibold
+hover:scale-105
+transition
 shadow-lg
-shadow-yellow-500/20"
+shadow-yellow-500/20
+disabled:opacity-60"
               >
                 <Plus size={18} />
               </button>
 
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            {/* Category List */}
 
-              {(activeTab === "place"
-                ? placeCategories
-                : storyCategories
-              ).map((cat, index) => (
+            {loading ? (
 
-                <div
-                  key={index}
-                  className="flex justify-between items-center rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white/90 hover:border-heritage-gold transition"
-                >
+              <div className="text-center text-gray-400 py-20">
+                Loading Categories...
+              </div>
 
-                  <div>
+            ) : (
 
-                    <h3 className="font-semibold">
-                      {cat}
-                    </h3>
+              <div className="grid md:grid-cols-2 gap-4">
 
-                    <p className="text-sm text-gray-500">
+                {(activeTab === "place"
+                  ? placeCategories
+                  : storyCategories
+                ).map((cat) => (
 
-                      {activeTab === "place"
-                        ? "Place Category"
-                        : "Story Category"}
+                  <div
+                    key={cat.category_id}
+                    className="
+flex
+justify-between
+items-center
+rounded-2xl
+border
+border-white/10
+bg-white/5
+px-5
+py-4
+text-white
+hover:border-heritage-gold
+transition"
+                  >
 
-                    </p>
+                    <div>
+
+                      <h3 className="font-semibold">
+                        {cat.category_name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500">
+                        {cat.usage_type}
+                      </p>
+
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        handleDeleteCategory(
+                          cat.category_id
+                        )
+                      }
+                      className="
+p-2
+rounded-lg
+bg-red-500/10
+text-red-400
+hover:bg-red-500
+hover:text-white
+transition"
+                    >
+                      <Trash2 size={17} />
+                    </button>
 
                   </div>
 
-                  <button
-                    onClick={() =>
-                      handleDeleteCategory(index)
-                    }
-                    className="p-2 rounded-lg bg-red-500/10
-text-red-400
-hover:bg-red-500
-hover:text-white transition"
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                ))}
 
-                </div>
+              </div>
 
-              ))}
-
-            </div>
+            )}
 
           </div>
+                    {/* ================= RIGHT ================= */}
 
-          {/* RIGHT */}
-
-          <div className="rounded-2xl border border-heritage-gold/20 bg-linear-to-br from-[#111C2C]
+          <div
+            className="
+rounded-2xl
+border
+border-heritage-gold/20
+bg-linear-to-br
+from-[#111C2C]
 via-[#0E1826]
-to-[#08111D] p-4">
+to-[#08111D]
+p-6
+h-fit
+"
+          >
 
             <h3 className="text-xl font-semibold text-heritage-gold mb-6">
               Statistics
@@ -244,11 +523,19 @@ to-[#08111D] p-4">
 
             <div className="space-y-5">
 
-              <div className="rounded-xl bg-[#141D2B] p-4 hover:bg-[#1A2537]
-hover:border-heritage-gold
-hover:-translate-y-1
+              {/* Place */}
+
+              <div
+                className="
+rounded-xl
+bg-[#141D2B]
+p-4
 transition-all
-duration-300">
+duration-300
+hover:-translate-y-1
+hover:bg-[#1A2537]
+"
+              >
 
                 <p className="text-gray-400">
                   Place Categories
@@ -260,11 +547,19 @@ duration-300">
 
               </div>
 
-              <div className="rounded-xl bg-[#141D2B] p-4 hover:bg-[#1A2537]
-hover:border-heritage-gold
-hover:-translate-y-1
+              {/* Story */}
+
+              <div
+                className="
+rounded-xl
+bg-[#141D2B]
+p-4
 transition-all
-duration-300">
+duration-300
+hover:-translate-y-1
+hover:bg-[#1A2537]
+"
+              >
 
                 <p className="text-gray-400">
                   Story Categories
@@ -276,15 +571,26 @@ duration-300">
 
               </div>
 
-              <div className="rounded-xl bg-white/5 p-4">
+              {/* Total */}
+
+              <div
+                className="
+rounded-xl
+bg-[#141D2B]
+p-4
+transition-all
+duration-300
+hover:-translate-y-1
+hover:bg-[#1A2537]
+"
+              >
 
                 <p className="text-gray-400">
                   Total Categories
                 </p>
 
                 <h2 className="text-4xl font-bold text-green-400 mt-2">
-                  {placeCategories.length +
-                    storyCategories.length}
+                  {categories.length}
                 </h2>
 
               </div>
@@ -298,7 +604,9 @@ duration-300">
       </div>
 
     </div>
+
   );
+
 };
 
 export default ManageCategories;

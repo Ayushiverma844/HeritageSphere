@@ -1,8 +1,13 @@
 const db = require("../config/db");
 const slugify = require("slugify");
 
+const {
+    uploadImage,
+    deleteImage
+} = require("../utils/cloudinaryHelper");
+
 // ==========================================
-// Helper
+// Helper Functions
 // ==========================================
 
 const generateSlug = (title) => {
@@ -16,6 +21,94 @@ const generateSlug = (title) => {
     });
 
 };
+// ==========================================
+// Generate Unique Story Slug
+// ==========================================
+
+const generateUniqueSlug = async (connection, title) => {
+
+    const baseSlug = slugify(title, {
+
+        lower: true,
+        strict: true,
+        trim: true
+
+    });
+
+    let slug = baseSlug;
+
+    let count = 1;
+
+    while (true) {
+
+        const [existing] = await connection.query(
+
+            `
+            SELECT story_id
+
+            FROM stories
+
+            WHERE slug=?
+            `,
+
+            [slug]
+
+        );
+
+        if (existing.length === 0) {
+
+            return slug;
+
+        }
+
+        slug = `${baseSlug}-${count}`;
+
+        count++;
+
+    }
+
+};
+
+const isEmpty = (value) => {
+
+    return (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    );
+
+};
+
+const validateLatitude = (latitude) => {
+
+    if (
+        latitude === undefined ||
+        latitude === null ||
+        latitude === ""
+    ) {
+        return true;
+    }
+
+    return latitude >= -90 && latitude <= 90;
+
+};
+
+const validateLongitude = (longitude) => {
+
+    if (
+        longitude === undefined ||
+        longitude === null ||
+        longitude === ""
+    ) {
+        return true;
+    }
+
+    return longitude >= -180 && longitude <= 180;
+
+};
+
+
+
 
 // ==========================================
 // Create Place
@@ -24,6 +117,8 @@ const generateSlug = (title) => {
 const createPlace = async (req, res) => {
 
     let connection;
+
+    let uploadedImage = null;
 
     try {
 
@@ -38,7 +133,6 @@ const createPlace = async (req, res) => {
             city,
             state,
             country,
-            image_url,
             entry_fee,
             latitude,
             longitude,
@@ -59,16 +153,20 @@ const createPlace = async (req, res) => {
         } = req.body;
 
         // ==========================
-        // Validation
+        // Required Validation
         // ==========================
 
         if (
 
-            !category_id ||
-            !name ||
-            !city ||
-            !state ||
-            !short_description
+            isEmpty(category_id) ||
+
+            isEmpty(name) ||
+
+            isEmpty(city) ||
+
+            isEmpty(state) ||
+
+            isEmpty(short_description)
 
         ) {
 
@@ -86,12 +184,50 @@ const createPlace = async (req, res) => {
         }
 
         name = name.trim();
+
         city = city.trim();
+
         state = state.trim();
 
         country = country?.trim() || "India";
 
         short_description = short_description.trim();
+
+        // ==========================
+        // Latitude
+        // ==========================
+
+        if (!validateLatitude(latitude)) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Invalid Latitude"
+
+            });
+
+        }
+
+        // ==========================
+        // Longitude
+        // ==========================
+
+        if (!validateLongitude(longitude)) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Invalid Longitude"
+
+            });
+
+        }
 
         // ==========================
         // Category Exists
@@ -119,7 +255,7 @@ const createPlace = async (req, res) => {
 
                 success: false,
 
-                message: "Category not found"
+                message: "Category not found."
 
             });
 
@@ -151,57 +287,33 @@ const createPlace = async (req, res) => {
 
                 success: false,
 
-                message: "Place already exists"
+                message: "Place already exists."
 
             });
 
         }
 
         // ==========================
-        // Latitude
+        // Upload Image (Optional)
         // ==========================
 
-        if (
+        let image_url = null;
 
-            latitude !== undefined &&
-            latitude !== null &&
-            (latitude < -90 || latitude > 90)
+        let public_id = null;
 
-        ) {
+        if (req.file) {
 
-            await connection.rollback();
+            uploadedImage = await uploadImage(
 
-            return res.status(400).json({
+                req.file.buffer,
 
-                success: false,
+                "places"
 
-                message: "Invalid Latitude"
+            );
 
-            });
+            image_url = uploadedImage.secure_url;
 
-        }
-
-        // ==========================
-        // Longitude
-        // ==========================
-
-        if (
-
-            longitude !== undefined &&
-            longitude !== null &&
-            (longitude < -180 || longitude > 180)
-
-        ) {
-
-            await connection.rollback();
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Invalid Longitude"
-
-            });
+            public_id = uploadedImage.public_id;
 
         }
 
@@ -214,31 +326,54 @@ const createPlace = async (req, res) => {
             `
             INSERT INTO places
             (
+
                 category_id,
+
                 name,
+
                 city,
+
                 state,
+
                 country,
+
                 image_url,
+
+                public_id,
+
                 entry_fee,
+
                 latitude,
+
                 longitude
+
             )
 
             VALUES
-            (?,?,?,?,?,?,?,?,?)
+            (?,?,?,?,?,?,?,?,?,?)
+
             `,
 
             [
 
                 category_id,
+
                 name,
+
                 city,
+
                 state,
+
                 country,
-                image_url || null,
+
+                image_url,
+
+                public_id,
+
                 entry_fee || null,
+
                 latitude || null,
+
                 longitude || null
 
             ]
@@ -248,7 +383,7 @@ const createPlace = async (req, res) => {
         const placeId = placeResult.insertId;
 
         // ==========================
-        // Insert Place Details
+        // Insert Details
         // ==========================
 
         await connection.query(
@@ -325,7 +460,7 @@ const createPlace = async (req, res) => {
         await connection.commit();
 
         // ==========================
-        // Fetch Created Place
+        // Fetch Created Record
         // ==========================
 
         const [place] = await db.query(
@@ -342,10 +477,12 @@ const createPlace = async (req, res) => {
             FROM places p
 
             JOIN categories c
-                ON p.category_id=c.category_id
+
+            ON p.category_id=c.category_id
 
             LEFT JOIN place_detail pd
-                ON p.place_id=pd.place_id
+
+            ON p.place_id=pd.place_id
 
             WHERE p.place_id=?
 
@@ -355,17 +492,19 @@ const createPlace = async (req, res) => {
 
         );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
-            message: "Place Created Successfully.",
+            message: "Place created successfully.",
 
             place: place[0]
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         if (connection) {
 
@@ -373,9 +512,17 @@ const createPlace = async (req, res) => {
 
         }
 
+        // Delete uploaded image if DB failed
+
+        if (uploadedImage?.public_id) {
+
+            await deleteImage(uploadedImage.public_id);
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -383,7 +530,9 @@ const createPlace = async (req, res) => {
 
         });
 
-    } finally {
+    }
+
+    finally {
 
         if (connection) {
 
@@ -394,7 +543,6 @@ const createPlace = async (req, res) => {
     }
 
 };
-
 // ==========================================
 // Update Place
 // ==========================================
@@ -402,6 +550,8 @@ const createPlace = async (req, res) => {
 const updatePlace = async (req, res) => {
 
     let connection;
+
+    let uploadedImage = null;
 
     try {
 
@@ -412,32 +562,30 @@ const updatePlace = async (req, res) => {
         await connection.beginTransaction();
 
         // ==========================
-        // Check Place Exists
+        // Existing Place
         // ==========================
 
-        const [place] = await connection.query(
-
+        const [existingPlace] = await connection.query(
             `
             SELECT *
             FROM places
-            WHERE place_id = ?
+            WHERE place_id=?
             `,
             [placeId]
-
         );
 
-        if (place.length === 0) {
+        if (existingPlace.length === 0) {
 
             await connection.rollback();
 
             return res.status(404).json({
-
                 success: false,
                 message: "Place not found."
-
             });
 
         }
+
+        const oldPlace = existingPlace[0];
 
         let {
 
@@ -446,7 +594,6 @@ const updatePlace = async (req, res) => {
             city,
             state,
             country,
-            image_url,
             entry_fee,
             latitude,
             longitude,
@@ -467,6 +614,79 @@ const updatePlace = async (req, res) => {
         } = req.body;
 
         // ==========================
+        // Required Validation
+        // ==========================
+
+        if (
+
+            isEmpty(category_id) ||
+            isEmpty(name) ||
+            isEmpty(city) ||
+            isEmpty(state) ||
+            isEmpty(short_description)
+
+        ) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Category, Name, City, State and Short Description are required."
+
+            });
+
+        }
+
+        name = name.trim();
+
+        city = city.trim();
+
+        state = state.trim();
+
+        country = country?.trim() || "India";
+
+        short_description = short_description.trim();
+
+        // ==========================
+        // Latitude
+        // ==========================
+
+        if (!validateLatitude(latitude)) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Invalid Latitude"
+
+            });
+
+        }
+
+        // ==========================
+        // Longitude
+        // ==========================
+
+        if (!validateLongitude(longitude)) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Invalid Longitude"
+
+            });
+
+        }
+
+        // ==========================
         // Category Exists
         // ==========================
 
@@ -475,7 +695,7 @@ const updatePlace = async (req, res) => {
             `
             SELECT category_id
             FROM categories
-            WHERE category_id = ?
+            WHERE category_id=?
             `,
             [category_id]
 
@@ -488,6 +708,7 @@ const updatePlace = async (req, res) => {
             return res.status(404).json({
 
                 success: false,
+
                 message: "Category not found."
 
             });
@@ -502,11 +723,22 @@ const updatePlace = async (req, res) => {
 
             `
             SELECT place_id
+
             FROM places
+
             WHERE LOWER(name)=LOWER(?)
+
             AND place_id<>?
+
             `,
-            [name, placeId]
+
+            [
+
+                name,
+
+                placeId
+
+            ]
 
         );
 
@@ -517,9 +749,34 @@ const updatePlace = async (req, res) => {
             return res.status(400).json({
 
                 success: false,
+
                 message: "Place name already exists."
 
             });
+
+        }
+
+        // ==========================
+        // Image Handling
+        // ==========================
+
+        let image_url = oldPlace.image_url;
+
+        let public_id = oldPlace.public_id;
+
+        if (req.file) {
+
+            uploadedImage = await uploadImage(
+
+                req.file.buffer,
+
+                "places"
+
+            );
+
+            image_url = uploadedImage.secure_url;
+
+            public_id = uploadedImage.public_id;
 
         }
 
@@ -531,32 +788,57 @@ const updatePlace = async (req, res) => {
 
             `
             UPDATE places
+
             SET
 
                 category_id=?,
+
                 name=?,
+
                 city=?,
+
                 state=?,
+
                 country=?,
+
                 image_url=?,
+
+                public_id=?,
+
                 entry_fee=?,
+
                 latitude=?,
-                longitude=?
+
+                longitude=?,
+
+                updated_at=CURRENT_TIMESTAMP
 
             WHERE place_id=?
+
             `,
 
             [
 
                 category_id,
+
                 name,
+
                 city,
+
                 state,
-                country || "India",
-                image_url || null,
+
+                country,
+
+                image_url,
+
+                public_id,
+
                 entry_fee || null,
+
                 latitude || null,
+
                 longitude || null,
+
                 placeId
 
             ]
@@ -571,38 +853,63 @@ const updatePlace = async (req, res) => {
 
             `
             UPDATE place_detail
+
             SET
 
                 short_description=?,
+
                 why_famous=?,
+
                 history=?,
+
                 architecture=?,
+
                 significance=?,
+
                 best_time_to_visit=?,
+
                 visiting_hours=?,
+
                 rituals=?,
+
                 how_to_reach=?,
+
                 travel_tips=?,
+
                 dress_code=?,
+
                 photography_allowed=?
 
             WHERE place_id=?
+
             `,
 
             [
 
-                short_description || null,
+                short_description,
+
                 why_famous || null,
+
                 history || null,
+
                 architecture || null,
+
                 significance || null,
+
                 best_time_to_visit || null,
+
                 visiting_hours || null,
+
                 rituals || null,
+
                 how_to_reach || null,
+
                 travel_tips || null,
+
                 dress_code || null,
+
                 photography_allowed || "Yes",
+
                 placeId
 
             ]
@@ -611,34 +918,63 @@ const updatePlace = async (req, res) => {
 
         await connection.commit();
 
+        // ==========================
+        // Delete Old Cloudinary Image
+        // ==========================
+
+        if (
+
+            req.file &&
+
+            oldPlace.public_id &&
+
+            oldPlace.public_id !== public_id
+
+        ) {
+
+            await deleteImage(oldPlace.public_id);
+
+        }
+
+        // ==========================
+        // Return Updated Place
+        // ==========================
+
         const [updated] = await db.query(
 
             `
             SELECT
 
                 p.*,
+
                 c.category_name,
+
                 pd.*
 
             FROM places p
 
             JOIN categories c
-            ON p.category_id = c.category_id
+
+            ON p.category_id=c.category_id
 
             LEFT JOIN place_detail pd
-            ON p.place_id = pd.place_id
 
-            WHERE p.place_id = ?
+            ON p.place_id=pd.place_id
+
+            WHERE p.place_id=?
+
             `,
 
             [placeId]
 
         );
 
-        res.status(200).json({
+        return res.status(200).json({
 
             success: true,
+
             message: "Place updated successfully.",
+
             place: updated[0]
 
         });
@@ -653,11 +989,20 @@ const updatePlace = async (req, res) => {
 
         }
 
+        // Delete newly uploaded image if DB update failed
+
+        if (uploadedImage?.public_id) {
+
+            await deleteImage(uploadedImage.public_id);
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
+
             message: error.message
 
         });
@@ -675,7 +1020,6 @@ const updatePlace = async (req, res) => {
     }
 
 };
-
 // ==========================================
 // Delete Place
 // ==========================================
@@ -692,17 +1036,20 @@ const deletePlace = async (req, res) => {
 
         await connection.beginTransaction();
 
-        // ==========================
-        // Check Exists
-        // ==========================
+        // ==========================================
+        // Check Place Exists
+        // ==========================================
 
         const [place] = await connection.query(
 
             `
-            SELECT place_id
+            SELECT
+                place_id,
+                public_id
             FROM places
-            WHERE place_id = ?
+            WHERE place_id=?
             `,
+
             [placeId]
 
         );
@@ -720,45 +1067,50 @@ const deletePlace = async (req, res) => {
 
         }
 
-        // ==========================
-        // Delete Place Details
-        // ==========================
+        const oldPublicId = place[0].public_id;
 
-        await connection.query(
+        // ==========================================
+        // Check Stories
+        // ==========================================
+
+        const [stories] = await connection.query(
 
             `
-            DELETE FROM place_detail
-            WHERE place_id = ?
+            SELECT story_id
+            FROM stories
+            WHERE place_id=?
             `,
 
             [placeId]
 
         );
 
-        // ==========================
-        // Delete Stories of Place
-        // ==========================
+        if (stories.length > 0) {
 
-        await connection.query(
+            await connection.rollback();
 
-            `
-            DELETE FROM stories
-            WHERE place_id = ?
-            `,
+            return res.status(400).json({
 
-            [placeId]
+                success: false,
 
-        );
+                message:
+                    "Cannot delete place. Delete all stories related to this place first."
 
-        // ==========================
+            });
+
+        }
+
+        // ==========================================
         // Delete Saved Items
-        // ==========================
+        // ==========================================
 
         await connection.query(
 
             `
             DELETE FROM saved_items
+
             WHERE item_type='PLACE'
+
             AND item_id=?
             `,
 
@@ -766,15 +1118,62 @@ const deletePlace = async (req, res) => {
 
         );
 
-        // ==========================
+        // ==========================================
+        // Delete Place Detail
+        // ==========================================
+
+        await connection.query(
+
+            `
+            DELETE FROM place_detail
+
+            WHERE place_id=?
+            `,
+
+            [placeId]
+
+        );
+
+        // ==========================================
+        // Delete Gallery Images
+        // ==========================================
+
+        const [galleryImages] = await connection.query(
+
+            `
+            SELECT public_id
+
+            FROM gallery
+
+            WHERE place_id=?
+            `,
+
+            [placeId]
+
+        );
+
+        await connection.query(
+
+            `
+            DELETE FROM gallery
+
+            WHERE place_id=?
+            `,
+
+            [placeId]
+
+        );
+
+        // ==========================================
         // Delete Place
-        // ==========================
+        // ==========================================
 
         await connection.query(
 
             `
             DELETE FROM places
-            WHERE place_id = ?
+
+            WHERE place_id=?
             `,
 
             [placeId]
@@ -783,9 +1182,43 @@ const deletePlace = async (req, res) => {
 
         await connection.commit();
 
-        res.status(200).json({
+        // ==========================================
+        // Delete Cloudinary Images
+        // ==========================================
+
+        try {
+
+            if (oldPublicId) {
+
+                await deleteImage(oldPublicId);
+
+            }
+
+            for (const image of galleryImages) {
+
+                if (image.public_id) {
+
+                    await deleteImage(image.public_id);
+
+                }
+
+            }
+
+        }
+
+        catch (cloudinaryError) {
+
+            console.log(
+                "Cloudinary Delete Error:",
+                cloudinaryError.message
+            );
+
+        }
+
+        return res.status(200).json({
 
             success: true,
+
             message: "Place deleted successfully."
 
         });
@@ -802,9 +1235,10 @@ const deletePlace = async (req, res) => {
 
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
+
             message: error.message
 
         });
@@ -836,8 +1270,11 @@ const createPlaceDetails = async (req, res) => {
         if (!place_id) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "Place ID is required."
+
             });
 
         }
@@ -845,39 +1282,54 @@ const createPlaceDetails = async (req, res) => {
         // Check Place Exists
 
         const [place] = await db.query(
+
             `
             SELECT place_id
             FROM places
-            WHERE place_id = ?
+            WHERE place_id=?
             `,
+
             [place_id]
+
         );
 
         if (place.length === 0) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message: "Place not found."
+
             });
 
         }
 
-        // Details Already Exists
+        // Already Exists
 
         const [existing] = await db.query(
+
             `
             SELECT detail_id
+
             FROM place_detail
-            WHERE place_id = ?
+
+            WHERE place_id=?
+
             `,
+
             [place_id]
+
         );
 
         if (existing.length > 0) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "Place details already exist."
+
             });
 
         }
@@ -885,16 +1337,27 @@ const createPlaceDetails = async (req, res) => {
         const {
 
             short_description,
+
             why_famous,
+
             history,
+
             architecture,
+
             significance,
+
             best_time_to_visit,
+
             visiting_hours,
+
             rituals,
+
             how_to_reach,
+
             travel_tips,
+
             dress_code,
+
             photography_allowed
 
         } = req.body;
@@ -933,9 +1396,11 @@ const createPlaceDetails = async (req, res) => {
 
             )
 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES
+            (?,?,?,?,?,?,?,?,?,?,?,?,?)
 
             `,
+
             [
 
                 place_id,
@@ -962,7 +1427,7 @@ const createPlaceDetails = async (req, res) => {
 
                 dress_code || null,
 
-                photography_allowed || null
+                photography_allowed || "Yes"
 
             ]
 
@@ -972,14 +1437,18 @@ const createPlaceDetails = async (req, res) => {
 
             `
             SELECT *
+
             FROM place_detail
-            WHERE detail_id = ?
+
+            WHERE detail_id=?
+
             `,
+
             [result.insertId]
 
         );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
@@ -995,7 +1464,7 @@ const createPlaceDetails = async (req, res) => {
 
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -1006,7 +1475,6 @@ const createPlaceDetails = async (req, res) => {
     }
 
 };
-
 // ==========================================
 // Update Place Details
 // ==========================================
@@ -1021,9 +1489,13 @@ const updatePlaceDetails = async (req, res) => {
 
             `
             SELECT *
+
             FROM place_detail
-            WHERE place_id = ?
+
+            WHERE place_id=?
+
             `,
+
             [placeId]
 
         );
@@ -1043,16 +1515,27 @@ const updatePlaceDetails = async (req, res) => {
         const {
 
             short_description,
+
             why_famous,
+
             history,
+
             architecture,
+
             significance,
+
             best_time_to_visit,
+
             visiting_hours,
+
             rituals,
+
             how_to_reach,
+
             travel_tips,
+
             dress_code,
+
             photography_allowed
 
         } = req.body;
@@ -1064,33 +1547,34 @@ const updatePlaceDetails = async (req, res) => {
 
             SET
 
-                short_description = ?,
+                short_description=?,
 
-                why_famous = ?,
+                why_famous=?,
 
-                history = ?,
+                history=?,
 
-                architecture = ?,
+                architecture=?,
 
-                significance = ?,
+                significance=?,
 
-                best_time_to_visit = ?,
+                best_time_to_visit=?,
 
-                visiting_hours = ?,
+                visiting_hours=?,
 
-                rituals = ?,
+                rituals=?,
 
-                how_to_reach = ?,
+                how_to_reach=?,
 
-                travel_tips = ?,
+                travel_tips=?,
 
-                dress_code = ?,
+                dress_code=?,
 
-                photography_allowed = ?
+                photography_allowed=?
 
-            WHERE place_id = ?
+            WHERE place_id=?
 
             `,
+
             [
 
                 short_description || null,
@@ -1115,7 +1599,7 @@ const updatePlaceDetails = async (req, res) => {
 
                 dress_code || null,
 
-                photography_allowed || null,
+                photography_allowed || "Yes",
 
                 placeId
 
@@ -1127,14 +1611,18 @@ const updatePlaceDetails = async (req, res) => {
 
             `
             SELECT *
+
             FROM place_detail
-            WHERE place_id = ?
+
+            WHERE place_id=?
+
             `,
+
             [placeId]
 
         );
 
-        res.json({
+        return res.json({
 
             success: true,
 
@@ -1150,7 +1638,7 @@ const updatePlaceDetails = async (req, res) => {
 
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -1161,7 +1649,6 @@ const updatePlaceDetails = async (req, res) => {
     }
 
 };
-
 // ==========================================
 // Delete Place Details
 // ==========================================
@@ -1176,9 +1663,13 @@ const deletePlaceDetails = async (req, res) => {
 
             `
             SELECT detail_id
+
             FROM place_detail
-            WHERE place_id = ?
+
+            WHERE place_id=?
+
             `,
+
             [placeId]
 
         );
@@ -1199,13 +1690,16 @@ const deletePlaceDetails = async (req, res) => {
 
             `
             DELETE FROM place_detail
-            WHERE place_id = ?
+
+            WHERE place_id=?
+
             `,
+
             [placeId]
 
         );
 
-        res.json({
+        return res.json({
 
             success: true,
 
@@ -1219,7 +1713,7 @@ const deletePlaceDetails = async (req, res) => {
 
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -1230,22 +1724,37 @@ const deletePlaceDetails = async (req, res) => {
     }
 
 };
+
 // ==========================================
 // Create Story
 // ==========================================
 
 const createStory = async (req, res) => {
 
+    let connection;
+
+    let uploadedImage = null;
+
     try {
+
+        connection = await db.getConnection();
+
+        await connection.beginTransaction();
 
         let {
 
             place_id,
+
             category_id,
+
             title,
+
             summary,
-            cover_image,
+
+            
+
             source_name,
+
             source_url
 
         } = req.body;
@@ -1256,44 +1765,86 @@ const createStory = async (req, res) => {
 
         if (
 
-            !category_id ||
-            !title ||
-            !summary
+            isEmpty(place_id) ||
+
+            isEmpty(category_id) ||
+
+            isEmpty(title) ||
+
+            isEmpty(summary)
 
         ) {
+
+            await connection.rollback();
 
             return res.status(400).json({
 
                 success: false,
 
                 message:
-                    "Category, Title and Summary are required."
+                    "Place, Category, Title and Summary are required."
 
             });
 
         }
 
         title = title.trim();
+
         summary = summary.trim();
 
-        const slug = generateSlug(title);
-
         // ==========================
-        // Category Exists
+        // Check Place
         // ==========================
 
-        const [category] = await db.query(
+        const [place] = await connection.query(
+
+            `
+            SELECT place_id
+
+            FROM places
+
+            WHERE place_id=?
+            `,
+
+            [place_id]
+
+        );
+
+        if (place.length === 0) {
+
+            await connection.rollback();
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Place not found."
+
+            });
+
+        }
+
+        // ==========================
+        // Check Category
+        // ==========================
+
+        const [category] = await connection.query(
 
             `
             SELECT category_id
+
             FROM categories
+
             WHERE category_id=?
             `,
+
             [category_id]
 
         );
 
         if (category.length === 0) {
+
+            await connection.rollback();
 
             return res.status(404).json({
 
@@ -1306,108 +1857,38 @@ const createStory = async (req, res) => {
         }
 
         // ==========================
-        // Place Exists (Optional)
+        // Generate Slug
         // ==========================
 
-        if (place_id) {
+        const slug = await generateUniqueSlug(
 
-            const [place] = await db.query(
+            connection,
 
-                `
-                SELECT place_id
-                FROM places
-                WHERE place_id=?
-                `,
-                [place_id]
+            title
+
+        );
+
+        // ==========================
+        // Upload Cover Image
+        // ==========================
+
+        let cover_image = null;
+
+        let public_id = null;
+
+        if (req.file) {
+
+            uploadedImage = await uploadImage(
+
+                req.file.buffer,
+
+                "stories"
 
             );
 
-            if (place.length === 0) {
+            cover_image = uploadedImage.secure_url;
 
-                return res.status(404).json({
-
-                    success: false,
-
-                    message: "Place not found."
-
-                });
-
-            }
-
-        }
-
-        // ==========================
-        // Duplicate Title
-        // ==========================
-
-        const [duplicate] = await db.query(
-
-            `
-            SELECT story_id
-            FROM stories
-            WHERE LOWER(title)=LOWER(?)
-            `,
-            [title]
-
-        );
-
-        if (duplicate.length > 0) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Story already exists."
-
-            });
-
-        }
-
-        // ==========================
-        // Slug Exists
-        // ==========================
-
-        const [slugExists] = await db.query(
-
-            `
-            SELECT story_id
-            FROM stories
-            WHERE slug=?
-            `,
-            [slug]
-
-        );
-
-        if (slugExists.length > 0) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Slug already exists."
-
-            });
-
-        }
-
-        // ==========================
-        // URL Validation
-        // ==========================
-
-        if (
-
-            source_url &&
-            !/^https?:\/\/.+/i.test(source_url)
-
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Invalid source URL."
-
-            });
+            public_id = uploadedImage.public_id;
 
         }
 
@@ -1415,7 +1896,7 @@ const createStory = async (req, res) => {
         // Insert Story
         // ==========================
 
-        const [result] = await db.query(
+        const [result] = await connection.query(
 
             `
             INSERT INTO stories
@@ -1433,6 +1914,8 @@ const createStory = async (req, res) => {
 
                 cover_image,
 
+                public_id,
+
                 total_chapters,
 
                 source_name,
@@ -1442,13 +1925,13 @@ const createStory = async (req, res) => {
             )
 
             VALUES
-            (?,?,?,?,?,?,?,?,?)
+            (?,?,?,?,?,?,?,?,?,?)
 
             `,
 
             [
 
-                place_id || null,
+                place_id,
 
                 category_id,
 
@@ -1458,9 +1941,11 @@ const createStory = async (req, res) => {
 
                 summary,
 
-                cover_image || null,
+                cover_image,
 
-                0,
+                public_id,
+
+                 0,
 
                 source_name || null,
 
@@ -1470,22 +1955,46 @@ const createStory = async (req, res) => {
 
         );
 
+        await connection.commit();
+
+        // ==========================
+        // Fetch Story
+        // ==========================
+
         const [story] = await db.query(
 
             `
-            SELECT *
+            SELECT
 
-            FROM stories
+                s.*,
 
-            WHERE story_id=?
+                p.name AS place_name,
+
+                c.category_name
+
+            FROM stories s
+
+            JOIN places p
+
+            ON s.place_id=p.place_id
+
+            JOIN categories c
+
+            ON s.category_id=c.category_id
+
+            WHERE s.story_id=?
 
             `,
 
-            [result.insertId]
+            [
+
+                result.insertId
+
+            ]
 
         );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
@@ -1499,9 +2008,27 @@ const createStory = async (req, res) => {
 
     catch (error) {
 
+        if (connection) {
+
+            await connection.rollback();
+
+        }
+
+        // Remove uploaded image if DB failed
+
+        if (uploadedImage?.public_id) {
+
+            await deleteImage(
+
+                uploadedImage.public_id
+
+            );
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -1511,17 +2038,64 @@ const createStory = async (req, res) => {
 
     }
 
-};
+    finally {
 
+        if (connection) {
+
+            connection.release();
+
+        }
+
+    }
+
+};
 // ==========================================
 // Update Story
 // ==========================================
 
 const updateStory = async (req, res) => {
 
+    let connection;
+    let uploadedImage = null;
+
     try {
 
-        const id = req.params.id;
+        const { storyId } = req.params;
+
+        connection = await db.getConnection();
+
+        await connection.beginTransaction();
+
+        // ==========================================
+        // Existing Story
+        // ==========================================
+
+        const [story] = await connection.query(
+
+            `
+            SELECT *
+            FROM stories
+            WHERE story_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        if (story.length === 0) {
+
+            await connection.rollback();
+
+            return res.status(404).json({
+
+                success: false,
+                message: "Story not found."
+
+            });
+
+        }
+
+        const oldStory = story[0];
 
         let {
 
@@ -1529,30 +2103,31 @@ const updateStory = async (req, res) => {
             category_id,
             title,
             summary,
-            cover_image,
             source_name,
             source_url
 
         } = req.body;
 
-        const [story] = await db.query(
+        // ==========================================
+        // Validation
+        // ==========================================
 
-            `
-            SELECT *
-            FROM stories
-            WHERE story_id=?
-            `,
-            [id]
+        if (
 
-        );
+            isEmpty(place_id) ||
+            isEmpty(category_id) ||
+            isEmpty(title) ||
+            isEmpty(summary)
 
-        if (story.length === 0) {
+        ) {
 
-            return res.status(404).json({
+            await connection.rollback();
+
+            return res.status(400).json({
 
                 success: false,
-
-                message: "Story not found."
+                message:
+                    "Place, Category, Title and Summary are required."
 
             });
 
@@ -1561,127 +2136,146 @@ const updateStory = async (req, res) => {
         title = title.trim();
         summary = summary.trim();
 
-        const slug = generateSlug(title);
+        // ==========================================
+        // Check Place
+        // ==========================================
 
-        // Category Exists
+        const [place] = await connection.query(
 
-        const [category] = await db.query(
+            `
+            SELECT place_id
+            FROM places
+            WHERE place_id=?
+            `,
+
+            [place_id]
+
+        );
+
+        if (place.length === 0) {
+
+            await connection.rollback();
+
+            return res.status(404).json({
+
+                success: false,
+                message: "Place not found."
+
+            });
+
+        }
+
+        // ==========================================
+        // Check Category
+        // ==========================================
+
+        const [category] = await connection.query(
 
             `
             SELECT category_id
             FROM categories
             WHERE category_id=?
             `,
+
             [category_id]
 
         );
 
         if (category.length === 0) {
 
+            await connection.rollback();
+
             return res.status(404).json({
 
                 success: false,
-
                 message: "Category not found."
 
             });
 
         }
 
-        // Place Exists
+        // ==========================================
+        // Generate Slug
+        // ==========================================
 
-        if (place_id) {
+        let slug = oldStory.slug;
 
-            const [place] = await db.query(
+        if (title !== oldStory.title) {
 
-                `
-                SELECT place_id
-                FROM places
-                WHERE place_id=?
-                `,
-                [place_id]
+            const baseSlug = slugify(title, {
 
-            );
+                lower: true,
+                strict: true,
+                trim: true
 
-            if (place.length === 0) {
+            });
 
-                return res.status(404).json({
+            slug = baseSlug;
 
-                    success: false,
+            let count = 1;
 
-                    message: "Place not found."
+            while (true) {
 
-                });
+                const [existing] = await connection.query(
+
+                    `
+                    SELECT story_id
+                    FROM stories
+                    WHERE slug=?
+                    AND story_id<>?
+                    `,
+
+                    [
+
+                        slug,
+                        storyId
+
+                    ]
+
+                );
+
+                if (existing.length === 0) {
+
+                    break;
+
+                }
+
+                slug = `${baseSlug}-${count}`;
+
+                count++;
 
             }
 
         }
 
-        // Duplicate Title
+        // ==========================================
+        // Cover Image
+        // ==========================================
 
-        const [duplicate] = await db.query(
+        let cover_image = oldStory.cover_image;
 
-            `
-            SELECT story_id
-            FROM stories
-            WHERE LOWER(title)=LOWER(?)
-            AND story_id<>?
-            `,
-            [
+        let public_id = oldStory.public_id;
 
-                title,
+        if (req.file) {
 
-                id
+            uploadedImage = await uploadImage(
 
-            ]
+                req.file.buffer,
+                "stories"
 
-        );
+            );
 
-        if (duplicate.length > 0) {
+            cover_image = uploadedImage.secure_url;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Story title already exists."
-
-            });
+            public_id = uploadedImage.public_id;
 
         }
 
-        // Duplicate Slug
+        // ==========================================
+        // Update Story
+        // ==========================================
 
-        const [slugExists] = await db.query(
-
-            `
-            SELECT story_id
-            FROM stories
-            WHERE slug=?
-            AND story_id<>?
-            `,
-            [
-
-                slug,
-
-                id
-
-            ]
-
-        );
-
-        if (slugExists.length > 0) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Slug already exists."
-
-            });
-
-        }
-
-        await db.query(
+        await connection.query(
 
             `
             UPDATE stories
@@ -1700,9 +2294,13 @@ const updateStory = async (req, res) => {
 
                 cover_image=?,
 
+                public_id=?,
+
                 source_name=?,
 
-                source_url=?
+                source_url=?,
+
+                updated_at=CURRENT_TIMESTAMP
 
             WHERE story_id=?
 
@@ -1710,40 +2308,77 @@ const updateStory = async (req, res) => {
 
             [
 
-                place_id || null,
-
+                place_id,
                 category_id,
-
                 title,
-
                 slug,
-
                 summary,
-
-                cover_image || null,
-
+                cover_image,
+                public_id,
                 source_name || null,
-
                 source_url || null,
-
-                id
+                storyId
 
             ]
 
         );
 
+        await connection.commit();
+
+        // ==========================================
+        // Delete Old Cover
+        // ==========================================
+
+        if (
+
+            req.file &&
+            oldStory.public_id &&
+            oldStory.public_id !== public_id
+
+        ) {
+
+            await deleteImage(
+
+                oldStory.public_id
+
+            );
+
+        }
+
+        // ==========================================
+        // Return Updated Story
+        // ==========================================
+
         const [updated] = await db.query(
 
             `
-            SELECT *
-            FROM stories
-            WHERE story_id=?
+            SELECT
+
+                s.*,
+
+                p.name AS place_name,
+
+                c.category_name
+
+            FROM stories s
+
+            JOIN places p
+
+            ON s.place_id=p.place_id
+
+            JOIN categories c
+
+            ON s.category_id=c.category_id
+
+            WHERE s.story_id=?
+
             `,
-            [id]
+
+            [storyId]
 
         );
 
-        res.json({
+        return res.status(200).json({
 
             success: true,
 
@@ -1757,128 +2392,25 @@ const updateStory = async (req, res) => {
 
     catch (error) {
 
-        console.log(error);
-
-        res.status(500).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
-    }
-
-};
-// ==========================================
-// Delete Story
-// ==========================================
-
-const deleteStory = async (req, res) => {
-
-    let connection;
-
-    try {
-
-        const id = req.params.id;
-
-        connection = await db.getConnection();
-
-        await connection.beginTransaction();
-
-        // Story Exists
-
-        const [story] = await connection.query(
-
-            `
-            SELECT story_id
-            FROM stories
-            WHERE story_id=?
-            `,
-
-            [id]
-
-        );
-
-        if (story.length === 0) {
-
-            await connection.rollback();
-
-            return res.status(404).json({
-
-                success: false,
-
-                message: "Story not found."
-
-            });
-
-        }
-
-        // Delete Chapters
-
-        await connection.query(
-
-            `
-            DELETE FROM story_chapters
-            WHERE story_id=?
-            `,
-
-            [id]
-
-        );
-
-        // Delete Saved Story
-
-        await connection.query(
-
-            `
-            DELETE FROM saved_items
-
-            WHERE item_type='STORY'
-
-            AND item_id=?
-            `,
-
-            [id]
-
-        );
-
-        // Delete Story
-
-        await connection.query(
-
-            `
-            DELETE FROM stories
-            WHERE story_id=?
-            `,
-
-            [id]
-
-        );
-
-        await connection.commit();
-
-        res.json({
-
-            success: true,
-
-            message: "Story deleted successfully."
-
-        });
-
-    }
-
-    catch (error) {
-
         if (connection) {
 
             await connection.rollback();
 
         }
 
+        if (uploadedImage?.public_id) {
+
+            await deleteImage(
+
+                uploadedImage.public_id
+
+            );
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -1901,67 +2433,42 @@ const deleteStory = async (req, res) => {
 };
 
 // ==========================================
-// Create Chapter
+// Delete Story
 // ==========================================
 
-const createChapter = async (req, res) => {
+const deleteStory = async (req, res) => {
+
+    let connection;
 
     try {
 
-        let {
+        const { storyId } = req.params;
 
-            story_id,
+        connection = await db.getConnection();
 
-            chapter_number,
+        await connection.beginTransaction();
 
-            title,
-
-            content,
-
-            image_url,
-
-            quote
-
-        } = req.body;
-
-        if (
-
-            !story_id ||
-
-            !chapter_number ||
-
-            !title ||
-
-            !content
-
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Story, Chapter Number, Title and Content are required."
-
-            });
-
-        }
-
+        // ==========================================
         // Story Exists
+        // ==========================================
 
-        const [story] = await db.query(
+        const [story] = await connection.query(
 
             `
-            SELECT story_id
+            SELECT
+                story_id,
+                public_id
             FROM stories
             WHERE story_id=?
             `,
 
-            [story_id]
+            [storyId]
 
         );
 
         if (story.length === 0) {
+
+            await connection.rollback();
 
             return res.status(404).json({
 
@@ -1973,9 +2480,257 @@ const createChapter = async (req, res) => {
 
         }
 
-        // Duplicate Chapter Number
+        const storyPublicId = story[0].public_id;
 
-        const [duplicate] = await db.query(
+        // ==========================================
+        // Fetch Chapter Images
+        // ==========================================
+
+        const [chapters] = await connection.query(
+
+            `
+            SELECT public_id
+
+            FROM story_chapters
+
+            WHERE story_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        // ==========================================
+        // Delete Saved Items
+        // ==========================================
+
+        await connection.query(
+
+            `
+            DELETE FROM saved_items
+
+            WHERE item_type='STORY'
+
+            AND item_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        // ==========================================
+        // Delete Chapters
+        // ==========================================
+
+        await connection.query(
+
+            `
+            DELETE FROM story_chapters
+
+            WHERE story_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        // ==========================================
+        // Delete Story
+        // ==========================================
+
+        await connection.query(
+
+            `
+            DELETE FROM stories
+
+            WHERE story_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        await connection.commit();
+
+        // ==========================================
+        // Delete Cloudinary Images
+        // ==========================================
+
+        try {
+
+            if (storyPublicId) {
+
+                await deleteImage(
+
+                    storyPublicId
+
+                );
+
+            }
+
+            for (const chapter of chapters) {
+
+                if (chapter.public_id) {
+
+                    await deleteImage(
+
+                        chapter.public_id
+
+                    );
+
+                }
+
+            }
+
+        }
+
+        catch (cloudinaryError) {
+
+            console.log(
+
+                "Cloudinary Delete Error:",
+
+                cloudinaryError.message
+
+            );
+
+        }
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Story deleted successfully."
+
+        });
+
+    }
+
+    catch (error) {
+
+        if (connection) {
+
+            await connection.rollback();
+
+        }
+
+        console.log(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+    finally {
+
+        if (connection) {
+
+            connection.release();
+
+        }
+
+    }
+
+};
+// ==========================================
+// Create Story Chapter
+// ==========================================
+
+const createChapter = async (req, res) => {
+
+    let connection;
+    let uploadedImage = null;
+
+    try {
+
+        connection = await db.getConnection();
+
+        await connection.beginTransaction();
+
+        const { storyId } = req.params;
+
+        let {
+
+            chapter_number,
+            title,
+            content,
+            quote
+
+        } = req.body;
+
+        // ==========================================
+        // Validation
+        // ==========================================
+
+        if (
+
+            isEmpty(chapter_number) ||
+            isEmpty(title) ||
+            isEmpty(content)
+
+        ) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Chapter Number, Title and Content are required."
+
+            });
+
+        }
+
+        chapter_number = Number(chapter_number);
+
+        title = title.trim();
+
+        content = content.trim();
+
+        quote = quote?.trim() || null;
+
+        // ==========================================
+        // Story Exists
+        // ==========================================
+
+        const [story] = await connection.query(
+
+            `
+            SELECT story_id
+            FROM stories
+            WHERE story_id=?
+            `,
+
+            [storyId]
+
+        );
+
+        if (story.length === 0) {
+
+            await connection.rollback();
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Story not found."
+
+            });
+
+        }
+
+        // ==========================================
+        // Duplicate Chapter Number
+        // ==========================================
+
+        const [duplicate] = await connection.query(
 
             `
             SELECT chapter_id
@@ -1990,7 +2745,7 @@ const createChapter = async (req, res) => {
 
             [
 
-                story_id,
+                storyId,
 
                 chapter_number
 
@@ -2000,17 +2755,48 @@ const createChapter = async (req, res) => {
 
         if (duplicate.length > 0) {
 
+            await connection.rollback();
+
             return res.status(400).json({
 
                 success: false,
 
-                message: "Chapter number already exists."
+                message:
+                    "Chapter number already exists."
 
             });
 
         }
 
-        const [result] = await db.query(
+        // ==========================================
+        // Upload Chapter Image
+        // ==========================================
+
+        let image_url = null;
+
+        let public_id = null;
+
+        if (req.file) {
+
+            uploadedImage = await uploadImage(
+
+                req.file.buffer,
+
+                "chapters"
+
+            );
+
+            image_url = uploadedImage.secure_url;
+
+            public_id = uploadedImage.public_id;
+
+        }
+
+        // ==========================================
+        // Insert Chapter
+        // ==========================================
+
+        const [chapterResult] = await connection.query(
 
             `
             INSERT INTO story_chapters
@@ -2026,80 +2812,89 @@ const createChapter = async (req, res) => {
 
                 image_url,
 
+                public_id,
+
                 quote
 
             )
 
             VALUES
-            (?,?,?,?,?,?)
+            (?,?,?,?,?,?,?)
 
             `,
 
             [
 
-                story_id,
+                storyId,
 
                 chapter_number,
 
-                title.trim(),
+                title,
 
-                content.trim(),
+                content,
 
-                image_url || null,
+                image_url,
 
-                quote || null
+                public_id,
+
+                quote
 
             ]
 
         );
+                // ==========================================
+        // Update Story Chapter Count
+        // ==========================================
 
-        // Update Total Chapters
-
-        await db.query(
+        await connection.query(
 
             `
             UPDATE stories
 
-            SET total_chapters=(
+            SET
 
-                SELECT COUNT(*)
+                total_chapters = total_chapters + 1,
 
-                FROM story_chapters
-
-                WHERE story_id=?
-
-            )
+                updated_at = CURRENT_TIMESTAMP
 
             WHERE story_id=?
 
             `,
 
-            [
-
-                story_id,
-
-                story_id
-
-            ]
+            [storyId]
 
         );
+
+        await connection.commit();
+
+        // ==========================================
+        // Fetch Created Chapter
+        // ==========================================
 
         const [chapter] = await db.query(
 
             `
-            SELECT *
+            SELECT
 
-            FROM story_chapters
+                sc.*,
 
-            WHERE chapter_id=?
+                s.title AS story_title
+
+            FROM story_chapters sc
+
+            JOIN stories s
+
+            ON sc.story_id = s.story_id
+
+            WHERE sc.chapter_id = ?
 
             `,
 
-            [result.insertId]
+            [chapterResult.insertId]
 
         );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             success: true,
 
@@ -2113,15 +2908,58 @@ const createChapter = async (req, res) => {
 
     catch (error) {
 
+        if (connection) {
+
+            await connection.rollback();
+
+        }
+
+        // ==========================================
+        // Delete Uploaded Image
+        // if DB transaction failed
+        // ==========================================
+
+        if (uploadedImage?.public_id) {
+
+            try {
+
+                await deleteImage(uploadedImage.public_id);
+
+            }
+
+            catch (cloudinaryError) {
+
+                console.log(
+
+                    "Cloudinary Cleanup Error:",
+
+                    cloudinaryError.message
+
+                );
+
+            }
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
             message: error.message
 
         });
+
+    }
+
+    finally {
+
+        if (connection) {
+
+            connection.release();
+
+        }
 
     }
 
@@ -2133,40 +2971,36 @@ const createChapter = async (req, res) => {
 
 const updateChapter = async (req, res) => {
 
+    let connection;
+    let uploadedImage = null;
+
     try {
 
-        const id = req.params.id;
+        const { chapterId } = req.params;
 
-        const {
+        connection = await db.getConnection();
 
-            chapter_number,
+        await connection.beginTransaction();
 
-            title,
+        // ==========================================
+        // Existing Chapter
+        // ==========================================
 
-            content,
-
-            image_url,
-
-            quote
-
-        } = req.body;
-
-        const [chapter] = await db.query(
+        const [chapter] = await connection.query(
 
             `
             SELECT *
-
             FROM story_chapters
-
             WHERE chapter_id=?
-
             `,
 
-            [id]
+            [chapterId]
 
         );
 
         if (chapter.length === 0) {
+
+            await connection.rollback();
 
             return res.status(404).json({
 
@@ -2178,11 +3012,55 @@ const updateChapter = async (req, res) => {
 
         }
 
-        const storyId = chapter[0].story_id;
+        const oldChapter = chapter[0];
 
-        // Duplicate Number
+        let {
 
-        const [duplicate] = await db.query(
+            chapter_number,
+            title,
+            content,
+            quote
+
+        } = req.body;
+
+        // ==========================================
+        // Validation
+        // ==========================================
+
+        if (
+
+            isEmpty(chapter_number) ||
+            isEmpty(title) ||
+            isEmpty(content)
+
+        ) {
+
+            await connection.rollback();
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Chapter Number, Title and Content are required."
+
+            });
+
+        }
+
+        chapter_number = Number(chapter_number);
+
+        title = title.trim();
+
+        content = content.trim();
+
+        quote = quote?.trim() || null;
+
+        // ==========================================
+        // Duplicate Chapter Number
+        // ==========================================
+
+        const [duplicate] = await connection.query(
 
             `
             SELECT chapter_id
@@ -2199,11 +3077,11 @@ const updateChapter = async (req, res) => {
 
             [
 
-                storyId,
+                oldChapter.story_id,
 
                 chapter_number,
 
-                id
+                chapterId
 
             ]
 
@@ -2211,17 +3089,48 @@ const updateChapter = async (req, res) => {
 
         if (duplicate.length > 0) {
 
+            await connection.rollback();
+
             return res.status(400).json({
 
                 success: false,
 
-                message: "Chapter number already exists."
+                message:
+                    "Chapter number already exists."
 
             });
 
         }
 
-        await db.query(
+        // ==========================================
+        // Image Handling
+        // ==========================================
+
+        let image_url = oldChapter.image_url;
+
+        let public_id = oldChapter.public_id;
+
+        if (req.file) {
+
+            uploadedImage = await uploadImage(
+
+                req.file.buffer,
+
+                "chapters"
+
+            );
+
+            image_url = uploadedImage.secure_url;
+
+            public_id = uploadedImage.public_id;
+
+        }
+
+        // ==========================================
+        // Update Chapter
+        // ==========================================
+
+        await connection.query(
 
             `
             UPDATE story_chapters
@@ -2236,7 +3145,11 @@ const updateChapter = async (req, res) => {
 
                 image_url=?,
 
-                quote=?
+                public_id=?,
+
+                quote=?,
+
+                updated_at=CURRENT_TIMESTAMP
 
             WHERE chapter_id=?
 
@@ -2250,32 +3163,85 @@ const updateChapter = async (req, res) => {
 
                 content,
 
-                image_url || null,
+                image_url,
 
-                quote || null,
+                public_id,
 
-                id
+                quote,
+
+                chapterId
 
             ]
 
         );
+                await connection.commit();
+
+        // ==========================================
+        // Delete Old Cloudinary Image
+        // ==========================================
+
+        if (
+
+            req.file &&
+
+            oldChapter.public_id &&
+
+            oldChapter.public_id !== public_id
+
+        ) {
+
+            try {
+
+                await deleteImage(
+
+                    oldChapter.public_id
+
+                );
+
+            }
+
+            catch (cloudinaryError) {
+
+                console.log(
+
+                    "Cloudinary Delete Error:",
+
+                    cloudinaryError.message
+
+                );
+
+            }
+
+        }
+
+        // ==========================================
+        // Fetch Updated Chapter
+        // ==========================================
 
         const [updated] = await db.query(
 
             `
-            SELECT *
+            SELECT
 
-            FROM story_chapters
+                sc.*,
 
-            WHERE chapter_id=?
+                s.title AS story_title
+
+            FROM story_chapters sc
+
+            JOIN stories s
+
+            ON sc.story_id = s.story_id
+
+            WHERE sc.chapter_id = ?
 
             `,
 
-            [id]
+            [chapterId]
 
         );
 
-        res.json({
+        return res.status(200).json({
 
             success: true,
 
@@ -2289,9 +3255,46 @@ const updateChapter = async (req, res) => {
 
     catch (error) {
 
+        if (connection) {
+
+            await connection.rollback();
+
+        }
+
+        // ==========================================
+        // Delete Newly Uploaded Image
+        // if DB update failed
+        // ==========================================
+
+        if (uploadedImage?.public_id) {
+
+            try {
+
+                await deleteImage(
+
+                    uploadedImage.public_id
+
+                );
+
+            }
+
+            catch (cloudinaryError) {
+
+                console.log(
+
+                    "Cloudinary Cleanup Error:",
+
+                    cloudinaryError.message
+
+                );
+
+            }
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -2301,22 +3304,47 @@ const updateChapter = async (req, res) => {
 
     }
 
-};
+    finally {
 
+        if (connection) {
+
+            connection.release();
+
+        }
+
+    }
+
+};
 // ==========================================
 // Delete Chapter
 // ==========================================
 
 const deleteChapter = async (req, res) => {
 
+    let connection;
+
     try {
 
-        const id = req.params.id;
+        const { chapterId } = req.params;
 
-        const [chapter] = await db.query(
+        connection = await db.getConnection();
+
+        await connection.beginTransaction();
+
+        // ==========================================
+        // Check Chapter Exists
+        // ==========================================
+
+        const [chapter] = await connection.query(
 
             `
-            SELECT *
+            SELECT
+
+                chapter_id,
+
+                story_id,
+
+                public_id
 
             FROM story_chapters
 
@@ -2324,11 +3352,13 @@ const deleteChapter = async (req, res) => {
 
             `,
 
-            [id]
+            [chapterId]
 
         );
 
         if (chapter.length === 0) {
+
+            await connection.rollback();
 
             return res.status(404).json({
 
@@ -2342,7 +3372,13 @@ const deleteChapter = async (req, res) => {
 
         const storyId = chapter[0].story_id;
 
-        await db.query(
+        const oldPublicId = chapter[0].public_id;
+
+        // ==========================================
+        // Delete Chapter
+        // ==========================================
+
+        await connection.query(
 
             `
             DELETE FROM story_chapters
@@ -2351,42 +3387,66 @@ const deleteChapter = async (req, res) => {
 
             `,
 
-            [id]
+            [chapterId]
 
         );
 
-        // Update total chapters
+        // ==========================================
+        // Update Story Chapter Count
+        // ==========================================
 
-        await db.query(
+        await connection.query(
 
             `
             UPDATE stories
 
-            SET total_chapters=(
+            SET
 
-                SELECT COUNT(*)
+                total_chapters = CASE
+                    WHEN total_chapters > 0
+                    THEN total_chapters - 1
+                    ELSE 0
+                END,
 
-                FROM story_chapters
-
-                WHERE story_id=?
-
-            )
+                updated_at = CURRENT_TIMESTAMP
 
             WHERE story_id=?
 
             `,
 
-            [
-
-                storyId,
-
-                storyId
-
-            ]
+            [storyId]
 
         );
 
-        res.json({
+        await connection.commit();
+
+        // ==========================================
+        // Delete Cloudinary Image
+        // ==========================================
+
+        if (oldPublicId) {
+
+            try {
+
+                await deleteImage(oldPublicId);
+
+            }
+
+            catch (cloudinaryError) {
+
+                console.log(
+
+                    "Cloudinary Delete Error:",
+
+                    cloudinaryError.message
+
+                );
+
+            }
+
+        }
+
+        return res.status(200).json({
 
             success: true,
 
@@ -2398,9 +3458,15 @@ const deleteChapter = async (req, res) => {
 
     catch (error) {
 
+        if (connection) {
+
+            await connection.rollback();
+
+        }
+
         console.log(error);
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -2410,39 +3476,61 @@ const deleteChapter = async (req, res) => {
 
     }
 
+    finally {
+
+        if (connection) {
+
+            connection.release();
+
+        }
+
+    }
+
 };
+
 module.exports = {
 
-    // ==========================
+
+
+
+    // ==========================================
     // Places
-    // ==========================
+    // ==========================================
 
     createPlace,
+
     updatePlace,
+
     deletePlace,
 
-    // ==========================
+    // ==========================================
     // Place Details
-    // ==========================
+    // ==========================================
 
     createPlaceDetails,
+
     updatePlaceDetails,
+
     deletePlaceDetails,
 
-    // ==========================
+    // ==========================================
     // Stories
-    // ==========================
+    // ==========================================
 
     createStory,
+
     updateStory,
+
     deleteStory,
 
-    // ==========================
-    // Story Chapters
-    // ==========================
+    // ==========================================
+    // Chapters
+    // ==========================================
 
     createChapter,
+
     updateChapter,
+
     deleteChapter
 
 };

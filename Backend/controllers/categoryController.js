@@ -207,32 +207,44 @@ const createCategory = async (req, res) => {
         }
 
         category_name = category_name.trim();
+        usage_type = usage_type.trim().toUpperCase();
 
-        usage_type = usage_type.toUpperCase();
+        if (!category_name) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Category Name cannot be empty."
+
+            });
+
+        }
 
         if (!["PLACE", "STORY", "BOTH"].includes(usage_type)) {
 
             return res.status(400).json({
 
                 success: false,
-                message: "Invalid Usage Type"
+                message: "Invalid Usage Type."
 
             });
 
         }
 
         const [existing] = await db.query(
+
             `
             SELECT category_id
             FROM categories
-            WHERE category_name = ?
+            WHERE LOWER(category_name) = LOWER(?)
             `,
             [category_name]
+
         );
 
         if (existing.length > 0) {
 
-            return res.status(400).json({
+            return res.status(409).json({
 
                 success: false,
                 message: "Category already exists."
@@ -242,26 +254,33 @@ const createCategory = async (req, res) => {
         }
 
         const [result] = await db.query(
+
             `
             INSERT INTO categories
-            (category_name, usage_type)
+            (
+                category_name,
+                usage_type
+            )
             VALUES (?, ?)
             `,
             [
                 category_name,
                 usage_type
             ]
+
         );
 
         res.status(201).json({
 
             success: true,
-            message: "Category Created Successfully",
+            message: "Category created successfully.",
             categoryId: result.insertId
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(error);
 
@@ -290,13 +309,51 @@ const updateCategory = async (req, res) => {
             usage_type
         } = req.body;
 
+        if (!category_name || !usage_type) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Category Name and Usage Type are required."
+
+            });
+
+        }
+
+        category_name = category_name.trim();
+        usage_type = usage_type.trim().toUpperCase();
+
+        if (!category_name) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Category Name cannot be empty."
+
+            });
+
+        }
+
+        if (!["PLACE", "STORY", "BOTH"].includes(usage_type)) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Invalid Usage Type."
+
+            });
+
+        }
+
         const [category] = await db.query(
+
             `
-            SELECT *
+            SELECT category_id
             FROM categories
             WHERE category_id = ?
             `,
             [id]
+
         );
 
         if (category.length === 0) {
@@ -304,43 +361,30 @@ const updateCategory = async (req, res) => {
             return res.status(404).json({
 
                 success: false,
-                message: "Category not found"
-
-            });
-
-        }
-
-        category_name = category_name.trim();
-
-        usage_type = usage_type.toUpperCase();
-
-        if (!["PLACE", "STORY", "BOTH"].includes(usage_type)) {
-
-            return res.status(400).json({
-
-                success: false,
-                message: "Invalid Usage Type"
+                message: "Category not found."
 
             });
 
         }
 
         const [duplicate] = await db.query(
+
             `
             SELECT category_id
             FROM categories
-            WHERE category_name = ?
-            AND category_id <> ?
+            WHERE LOWER(category_name)=LOWER(?)
+            AND category_id<>?
             `,
             [
                 category_name,
                 id
             ]
+
         );
 
         if (duplicate.length > 0) {
 
-            return res.status(400).json({
+            return res.status(409).json({
 
                 success: false,
                 message: "Category already exists."
@@ -350,28 +394,36 @@ const updateCategory = async (req, res) => {
         }
 
         await db.query(
+
             `
             UPDATE categories
             SET
-                category_name = ?,
-                usage_type = ?
-            WHERE category_id = ?
+
+                category_name=?,
+                usage_type=?
+
+            WHERE category_id=?
             `,
             [
+
                 category_name,
                 usage_type,
                 id
+
             ]
+
         );
 
         res.json({
 
             success: true,
-            message: "Category Updated Successfully"
+            message: "Category updated successfully."
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(error);
 
@@ -395,79 +447,92 @@ const deleteCategory = async (req, res) => {
 
         const id = req.params.id;
 
-        // Check if used by places
+        const [category] = await db.query(
 
-        const [places] = await db.query(
             `
-            SELECT place_id
-            FROM places
-            WHERE category_id = ?
-            LIMIT 1
+            SELECT category_id
+            FROM categories
+            WHERE category_id=?
             `,
             [id]
+
         );
 
-        if (places.length > 0) {
-
-            return res.status(400).json({
-
-                success: false,
-                message: "Category is used by places."
-
-            });
-
-        }
-
-        // Check if used by stories
-
-        const [stories] = await db.query(
-            `
-            SELECT story_id
-            FROM stories
-            WHERE category_id = ?
-            LIMIT 1
-            `,
-            [id]
-        );
-
-        if (stories.length > 0) {
-
-            return res.status(400).json({
-
-                success: false,
-                message: "Category is used by stories."
-
-            });
-
-        }
-
-        const [result] = await db.query(
-            `
-            DELETE FROM categories
-            WHERE category_id = ?
-            `,
-            [id]
-        );
-
-        if (result.affectedRows === 0) {
+        if (category.length === 0) {
 
             return res.status(404).json({
 
                 success: false,
-                message: "Category not found"
+                message: "Category not found."
 
             });
 
         }
 
+        const [[placeUsage]] = await db.query(
+
+            `
+            SELECT COUNT(*) AS total
+            FROM places
+            WHERE category_id=?
+            `,
+            [id]
+
+        );
+
+        if (placeUsage.total > 0) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Category is currently used by one or more places."
+
+            });
+
+        }
+
+        const [[storyUsage]] = await db.query(
+
+            `
+            SELECT COUNT(*) AS total
+            FROM stories
+            WHERE category_id=?
+            `,
+            [id]
+
+        );
+
+        if (storyUsage.total > 0) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Category is currently used by one or more stories."
+
+            });
+
+        }
+
+        await db.query(
+
+            `
+            DELETE FROM categories
+            WHERE category_id=?
+            `,
+            [id]
+
+        );
+
         res.json({
 
             success: true,
-            message: "Category Deleted Successfully"
+            message: "Category deleted successfully."
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(error);
 

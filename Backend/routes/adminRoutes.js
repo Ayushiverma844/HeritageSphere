@@ -2,122 +2,150 @@ const express = require("express");
 
 const router = express.Router();
 
-const adminController = require("../controllers/adminController");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+const upload = require("../middleware/upload");
 
-// Optional Middleware
-// const verifyToken = require("../middleware/verifyToken");
-// const isAdmin = require("../middleware/isAdmin");
+const {
 
-// ======================================================
-// PLACE CRUD
-// ======================================================
 
-// Create Place
+   
+
+    // Places
+    createPlace,
+    updatePlace,
+    deletePlace,
+
+    // Place Details
+    createPlaceDetails,
+    updatePlaceDetails,
+    deletePlaceDetails,
+
+    // Stories
+    createStory,
+    updateStory,
+    deleteStory,
+
+    // Chapters
+    createChapter,
+    updateChapter,
+    deleteChapter
+
+} = require("../controllers/adminController");
+
+
+
+
+
+
+// ==========================================
+// Places
+// ==========================================
+
 router.post(
     "/places",
-    // verifyToken,
-    // isAdmin,
-    adminController.createPlace
+    authMiddleware,
+    adminMiddleware,
+    upload.single("image"),
+    createPlace
 );
 
-// Update Place
 router.put(
     "/places/:placeId",
-    // verifyToken,
-    // isAdmin,
-    adminController.updatePlace
+    authMiddleware,
+    adminMiddleware,
+    upload.single("image"),
+    updatePlace
 );
 
-// Delete Place
 router.delete(
     "/places/:placeId",
-    // verifyToken,
-    // isAdmin,
-    adminController.deletePlace
+    authMiddleware,
+    adminMiddleware,
+    deletePlace
 );
 
-// ======================================================
-// PLACE DETAILS CRUD
-// ======================================================
 
-// Create Details
+// ==========================================
+// Place Details
+// ==========================================
+
 router.post(
     "/place-details",
-    // verifyToken,
-    // isAdmin,
-    adminController.createPlaceDetails
+    authMiddleware,
+    adminMiddleware,
+    createPlaceDetails
 );
 
-// Update Details
 router.put(
     "/place-details/:placeId",
-    // verifyToken,
-    // isAdmin,
-    adminController.updatePlaceDetails
+    authMiddleware,
+    adminMiddleware,
+    updatePlaceDetails
 );
 
-// Delete Details
 router.delete(
     "/place-details/:placeId",
-    // verifyToken,
-    // isAdmin,
-    adminController.deletePlaceDetails
+    authMiddleware,
+    adminMiddleware,
+    deletePlaceDetails
 );
 
-// ======================================================
-// STORY CRUD
-// ======================================================
 
-// Create Story
+// ==========================================
+// Stories
+// ==========================================
+
 router.post(
     "/stories",
-    // verifyToken,
-    // isAdmin,
-    adminController.createStory
+    authMiddleware,
+    adminMiddleware,
+    upload.single("cover_image"),
+    createStory
 );
 
-// Update Story
 router.put(
-    "/stories/:id",
-    // verifyToken,
-    // isAdmin,
-    adminController.updateStory
+    "/stories/:storyId",
+    authMiddleware,
+    adminMiddleware,
+    upload.single("cover_image"),
+    updateStory
 );
 
-// Delete Story
 router.delete(
-    "/stories/:id",
-    // verifyToken,
-    // isAdmin,
-    adminController.deleteStory
+    "/stories/:storyId",
+    authMiddleware,
+    adminMiddleware,
+    deleteStory
 );
 
-// ======================================================
-// STORY CHAPTER CRUD
-// ======================================================
 
-// Create Chapter
+// ==========================================
+// Story Chapters
+// ==========================================
+
 router.post(
-    "/chapters",
-    // verifyToken,
-    // isAdmin,
-    adminController.createChapter
+    "/stories/:storyId/chapters",
+    authMiddleware,
+    adminMiddleware,
+    upload.single("image"),
+    createChapter
 );
 
-// Update Chapter
 router.put(
-    "/chapters/:id",
-    // verifyToken,
-    // isAdmin,
-    adminController.updateChapter
+    "/chapters/:chapterId",
+    authMiddleware,
+    adminMiddleware,
+    upload.single("image"),
+    updateChapter
 );
 
-// Delete Chapter
 router.delete(
-    "/chapters/:id",
-    // verifyToken,
-    // isAdmin,
-    adminController.deleteChapter
+    "/chapters/:chapterId",
+    authMiddleware,
+    adminMiddleware,
+    deleteChapter
 );
+
 
 module.exports = router;
