@@ -1,4 +1,8 @@
 const db = require("../config/db");
+const {
+  uploadImage,
+  deleteImage
+} = require("../utils/cloudinaryHelper");
 
 const getPlaceDetails = async (req, res) => {
   try {
@@ -461,8 +465,939 @@ const getAllPlaces = async (req, res) => {
 };
 
 
+
+
+// Admin curd
+
+// ==========================
+// Get All Places (Admin)
+// ==========================
+
+const getAllPlacesAdmin = async (req, res) => {
+
+  try {
+
+    let {
+
+      page = 1,
+      limit = 30,
+      search,
+      category,
+      sort = "newest"
+
+    } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 10;
+
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT
+
+        p.place_id,
+        p.name,
+        p.city,
+        p.state,
+        p.country,
+
+        p.image_url,
+        p.entry_fee,
+
+        c.category_name,
+
+        p.created_at
+
+      FROM places p
+
+      JOIN categories c
+      ON p.category_id = c.category_id
+
+      WHERE 1 = 1
+    `;
+
+    let countQuery = `
+      SELECT COUNT(*) AS total
+
+      FROM places p
+
+      JOIN categories c
+      ON p.category_id = c.category_id
+
+      WHERE 1 = 1
+    `;
+
+    const values = [];
+
+    // Search
+
+    if (search) {
+
+      query += `
+        AND (
+          p.name LIKE ?
+          OR p.city LIKE ?
+          OR p.state LIKE ?
+        )
+      `;
+
+      countQuery += `
+        AND (
+          p.name LIKE ?
+          OR p.city LIKE ?
+          OR p.state LIKE ?
+        )
+      `;
+
+      values.push(
+
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+
+      );
+
+    }
+
+    // Category
+
+    if (category) {
+
+      query += ` AND p.category_id = ? `;
+      countQuery += ` AND p.category_id = ? `;
+
+      values.push(category);
+
+    }
+
+    // Sorting
+
+    switch (sort) {
+
+      case "oldest":
+
+        query += ` ORDER BY p.created_at ASC`;
+
+        break;
+
+      case "name":
+
+        query += ` ORDER BY p.name ASC`;
+
+        break;
+
+      default:
+
+        query += ` ORDER BY p.created_at DESC`;
+
+    }
+
+    query += ` LIMIT ? OFFSET ?`;
+
+    const [places] = await db.query(
+
+      query,
+
+      [...values, limit, offset]
+
+    );
+
+    const [count] = await db.query(
+
+      countQuery,
+
+      values
+
+    );
+
+    const totalPlaces = count[0].total;
+
+    res.status(200).json({
+
+      success: true,
+
+      pagination: {
+
+        currentPage: page,
+
+        totalPages: Math.ceil(totalPlaces / limit),
+
+        totalPlaces,
+
+        limit,
+
+        hasNextPage:
+          page < Math.ceil(totalPlaces / limit),
+
+        hasPreviousPage:
+          page > 1
+
+      },
+
+      places
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+// ==========================
+// Get Place By Id (Admin)
+// ==========================
+
+const getPlaceAdminById = async (req, res) => {
+
+  try {
+
+    const placeId = req.params.id;
+
+    const [rows] = await db.query(
+
+      `
+      SELECT
+
+        p.*,
+
+        pd.detail_id,
+        pd.short_description,
+        pd.why_famous,
+        pd.history,
+        pd.architecture,
+        pd.significance,
+        pd.best_time_to_visit,
+        pd.visiting_hours,
+        pd.rituals,
+        pd.how_to_reach,
+        pd.travel_tips,
+        pd.dress_code,
+        pd.photography_allowed
+
+      FROM places p
+
+      LEFT JOIN place_detail pd
+      ON p.place_id = pd.place_id
+
+      WHERE p.place_id = ?
+
+      LIMIT 1
+      `,
+
+      [placeId]
+
+    );
+
+    if (rows.length === 0) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: "Place not found."
+
+      });
+
+    }
+
+    res.status(200).json({
+
+      success: true,
+
+      place: rows[0]
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+// ==========================
+// Create Place (Admin)
+// ==========================
+
+const createPlace = async (req, res) => {
+  
+  let connection;
+  let uploadedImage = null;
+
+  try {
+
+    const {
+
+      category_id,
+
+      name,
+      city,
+      state,
+      country,
+
+      entry_fee,
+
+      latitude,
+      longitude,
+
+      short_description,
+      why_famous,
+      history,
+      architecture,
+      significance,
+
+      best_time_to_visit,
+      visiting_hours,
+
+      rituals,
+
+      how_to_reach,
+      travel_tips,
+      dress_code,
+
+      photography_allowed
+
+    } = req.body;
+
+    // ==========================
+    // Validation
+    // ==========================
+
+    if (
+      !category_id ||
+      !name ||
+      !city ||
+      !state ||
+      !country
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          "Category, Name, City, State and Country are required."
+
+      });
+
+    }
+
+    if (!req.file) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message: "Place image is required."
+
+      });
+
+    }
+
+    // ==========================
+    // Upload Image
+    // ==========================
+
+    uploadedImage = await uploadImage(
+
+      req.file.buffer,
+
+      "places"
+
+    );
+
+    // ==========================
+    // Transaction
+    // ==========================
+
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    // ==========================
+    // Insert Place
+    // ==========================
+
+    const [placeResult] = await connection.query(
+
+      `
+      INSERT INTO places (
+
+        category_id,
+
+        name,
+        city,
+        state,
+        country,
+
+        image_url,
+        public_id,
+
+        entry_fee,
+
+        latitude,
+        longitude
+
+      )
+
+      VALUES (
+
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+
+      )
+      `,
+
+      [
+
+        category_id,
+
+        name.trim(),
+        city.trim(),
+        state.trim(),
+        country.trim(),
+
+        uploadedImage.secure_url,
+        uploadedImage.public_id,
+
+        entry_fee || null,
+
+        latitude || null,
+        longitude || null
+
+      ]
+
+    );
+
+    const placeId = placeResult.insertId;
+
+    // ==========================
+    // Insert Details
+    // ==========================
+
+    await connection.query(
+
+      `
+      INSERT INTO place_detail (
+
+        place_id,
+
+        short_description,
+        why_famous,
+        history,
+        architecture,
+        significance,
+
+        best_time_to_visit,
+        visiting_hours,
+
+        rituals,
+
+        how_to_reach,
+        travel_tips,
+        dress_code,
+
+        photography_allowed
+
+      )
+
+      VALUES (
+
+        ?,?,?,?,?,?,?,?,?,?,?,?,?
+
+      )
+      `,
+
+      [
+
+        placeId,
+
+        short_description || null,
+        why_famous || null,
+        history || null,
+        architecture || null,
+        significance || null,
+
+        best_time_to_visit || null,
+        visiting_hours || null,
+
+        rituals || null,
+
+        how_to_reach || null,
+        travel_tips || null,
+        dress_code || null,
+
+        photography_allowed || "Yes"
+
+      ]
+
+    );
+
+    await connection.commit();
+
+    connection.release();
+
+    res.status(201).json({
+
+      success: true,
+
+      message: "Place created successfully.",
+
+      placeId
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    if (connection) {
+
+      await connection.rollback();
+
+      connection.release();
+
+    }
+
+    // delete uploaded image if DB failed
+
+    if (uploadedImage?.public_id) {
+
+      await deleteImage(uploadedImage.public_id);
+
+    }
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+
+// ==========================
+// Update Place (Admin)
+// ==========================
+
+const updatePlace = async (req, res) => {
+
+  let connection;
+
+  let uploadedImage = null;
+
+  let oldPublicId = null;
+
+  try {
+
+    const placeId = req.params.id;
+
+    const {
+
+      category_id,
+
+      name,
+      city,
+      state,
+      country,
+
+      entry_fee,
+
+      latitude,
+      longitude,
+
+      short_description,
+      why_famous,
+      history,
+      architecture,
+      significance,
+
+      best_time_to_visit,
+      visiting_hours,
+
+      rituals,
+
+      how_to_reach,
+      travel_tips,
+      dress_code,
+
+      photography_allowed
+
+    } = req.body;
+
+    // ==========================
+    // Check Place
+    // ==========================
+
+    const [place] = await db.query(
+
+      `
+      SELECT
+        image_url,
+        public_id
+      FROM places
+      WHERE place_id=?
+      `,
+
+      [placeId]
+
+    );
+
+    if (place.length === 0) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: "Place not found."
+
+      });
+
+    }
+
+    let imageUrl = place[0].image_url;
+
+    let publicId = place[0].public_id;
+
+    // ==========================
+    // Upload New Image
+    // ==========================
+
+    if (req.file) {
+
+      uploadedImage = await uploadImage(
+
+        req.file.buffer,
+
+        "places"
+
+      );
+
+      imageUrl = uploadedImage.secure_url;
+
+      publicId = uploadedImage.public_id;
+
+      oldPublicId = place[0].public_id;
+
+    }
+
+    // ==========================
+    // Transaction
+    // ==========================
+
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    // ==========================
+    // Update Places
+    // ==========================
+
+    await connection.query(
+
+      `
+      UPDATE places
+
+      SET
+
+        category_id=?,
+
+        name=?,
+        city=?,
+        state=?,
+        country=?,
+
+        image_url=?,
+        public_id=?,
+
+        entry_fee=?,
+
+        latitude=?,
+        longitude=?
+
+      WHERE place_id=?
+      `,
+
+      [
+
+        category_id,
+
+        name.trim(),
+        city.trim(),
+        state.trim(),
+        country.trim(),
+
+        imageUrl,
+        publicId,
+
+        entry_fee || null,
+
+        latitude || null,
+        longitude || null,
+
+        placeId
+
+      ]
+
+    );
+
+    // ==========================
+    // Update Details
+    // ==========================
+
+    await connection.query(
+
+      `
+      UPDATE place_detail
+
+      SET
+
+        short_description=?,
+        why_famous=?,
+        history=?,
+        architecture=?,
+        significance=?,
+
+        best_time_to_visit=?,
+        visiting_hours=?,
+
+        rituals=?,
+
+        how_to_reach=?,
+        travel_tips=?,
+        dress_code=?,
+
+        photography_allowed=?
+
+      WHERE place_id=?
+      `,
+
+      [
+
+        short_description || null,
+        why_famous || null,
+        history || null,
+        architecture || null,
+        significance || null,
+
+        best_time_to_visit || null,
+        visiting_hours || null,
+
+        rituals || null,
+
+        how_to_reach || null,
+        travel_tips || null,
+        dress_code || null,
+
+        photography_allowed || "Yes",
+
+        placeId
+
+      ]
+
+    );
+
+    await connection.commit();
+
+    connection.release();
+
+    // ==========================
+    // Delete Old Image
+    // ==========================
+
+    if (oldPublicId) {
+
+      await deleteImage(oldPublicId);
+
+    }
+
+    res.status(200).json({
+
+      success: true,
+
+      message: "Place updated successfully."
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    if (connection) {
+
+      await connection.rollback();
+
+      connection.release();
+
+    }
+
+    // delete newly uploaded image
+
+    if (uploadedImage?.public_id) {
+
+      await deleteImage(uploadedImage.public_id);
+
+    }
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+// ==========================
+// Delete Place (Admin)
+// ==========================
+
+const deletePlace = async (req, res) => {
+
+  let connection;
+
+  try {
+
+    const placeId = req.params.id;
+
+    // ==========================
+    // Check Place
+    // ==========================
+
+    const [place] = await db.query(
+
+      `
+      SELECT
+        public_id
+      FROM places
+      WHERE place_id=?
+      `,
+
+      [placeId]
+
+    );
+
+    if (place.length === 0) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        message: "Place not found."
+
+      });
+
+    }
+
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    // ==========================
+    // Delete Place
+    // ==========================
+
+    await connection.query(
+
+      `
+      DELETE FROM places
+      WHERE place_id=?
+      `,
+
+      [placeId]
+
+    );
+
+    await connection.commit();
+
+    connection.release();
+
+    // ==========================
+    // Delete Cloudinary Image
+    // ==========================
+
+    if (place[0].public_id) {
+
+      await deleteImage(place[0].public_id);
+
+    }
+
+    res.json({
+
+      success: true,
+
+      message: "Place deleted successfully."
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    if (connection) {
+
+      await connection.rollback();
+
+      connection.release();
+
+    }
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
+
+};
+
+
 module.exports = {
   getPlaceDetails,
   getSimilarPlaces,
-  getAllPlaces
+  getAllPlaces,
+
+   getAllPlacesAdmin,
+  getPlaceAdminById,
+  createPlace,
+  updatePlace,
+  deletePlace
 };

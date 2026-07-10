@@ -1,44 +1,62 @@
 const express = require("express");
 const router = express.Router();
 
+const upload = require("../middleware/upload");
+
 const authMiddleware = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const isAdmin = require("../middleware/adminMiddleware");
 
 const {
-    addImage,
-    getImagesByPlace,
-    deleteImage,
-    setCoverImage
+
+  uploadGalleryImages,
+  getGalleryImages,
+  updateGalleryCaption,
+  deleteGalleryImage,
+
 } = require("../controllers/galleryController");
 
-// Add image
-router.post(
-    "/",
-    authMiddleware,
-    adminMiddleware,
-    addImage
-);
+// =====================================
+// Public
+// =====================================
 
-// Get images for a place
+// Get Gallery Images of Place
+
 router.get(
-    "/:placeId",
-    getImagesByPlace
+  "/:placeId",
+  getGalleryImages
 );
 
-// Delete image
-router.delete(
-    "/:imageId",
-    authMiddleware,
-    adminMiddleware,
-    deleteImage
+// =====================================
+// Admin
+// =====================================
+
+// Upload Multiple Gallery Images
+
+router.post(
+  "/admin/:placeId",
+  authMiddleware,
+  isAdmin,
+  upload.array("gallery", 20),
+  uploadGalleryImages
 );
 
-// Set cover image
+// Update Caption
+
 router.put(
-    "/set-cover/:imageId",
-    authMiddleware,
-    adminMiddleware,
-    setCoverImage
+  "/admin/:imageId",
+  authMiddleware,
+  isAdmin,
+  updateGalleryCaption
 );
+
+// Delete Gallery Image
+
+router.delete(
+  "/admin/:imageId",
+  authMiddleware,
+  isAdmin,
+  deleteGalleryImage
+);
+
 
 module.exports = router;
