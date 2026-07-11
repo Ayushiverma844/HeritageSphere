@@ -121,7 +121,7 @@ const EpicTales = () => {
                 alt={story.title}
 
                 className="
-                h-60
+                h-65
                 w-full
                 object-cover
                 group-hover:scale-110
@@ -132,8 +132,11 @@ const EpicTales = () => {
               />
 
               <div className="absolute inset-0 " />
+              
+{/* Dark Gradient */}
+<div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent"></div>
 
-              <div className="absolute bottom-0 p-4 w-full">
+              <div className="absolute bottom-0 p-5 w-full">
 
                 <h3 className="font-semibold text-mauve-50 text-sm">
 

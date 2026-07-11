@@ -122,55 +122,58 @@ const HeritageHighlights = () => {
                   state: { place },
                 })
               }
-              className="group rounded-2xl overflow-hidden border border-heritage-gold/20 bg-white/5 hover:border-heritage-gold/50 transition-all duration-300"
-            >
-              {/* Image */}
-              <div className="relative overflow-hidden">
+              className="group relative h-65 rounded-2xl overflow-hidden border border-heritage-gold/20 hover:border-heritage-gold/50 transition-all duration-300" >
+              
+             {/* Image */}
 
-                <img
-                  src={place.image_url}
-                  alt={place.name}
-                  className="h-52 w-full object-cover group-hover:scale-110 transition duration-500"
-                />
 
-                {/* BOOKMARK BUTTON */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSave(place);
-                  }}
-                  className="absolute top-3 right-3 h-9 w-9 rounded-full bg-black/40 backdrop-blur flex items-center justify-center cursor-pointer"
-                >
-                  <Bookmark
-                    size={18}
-                    className={
-                      savedItems.includes(place.place_id)
-                        ? "text-heritage-gold fill-heritage-gold"
-                        : "text-white"
-                    }
-                  />
-                </button>
+ {/* Full Image */}
+<img
+  src={place.image_url}
+  alt={place.name}
+  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500"
+/>
 
-              </div>
+{/* Dark Gradient */}
+<div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent"></div>
+
+{/* BOOKMARK BUTTON */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleSave(place);
+  }}
+  className="absolute top-3 right-3 z-20 h-9 w-9 rounded-full bg-black/40 backdrop-blur flex items-center justify-center cursor-pointer"
+>
+  <Bookmark
+    size={18}
+    className={
+      savedItems.includes(place.place_id)
+        ? "text-heritage-gold fill-heritage-gold"
+        : "text-white"
+    }
+  />
+</button>
+
 
               {/* Content */}
-              <div className="p-4">
+            
+<div className="absolute bottom-0 left-0 right-0 z-10 p-4">
 
-                <h3 className="font-semibold text-lg">
-                  {place.name}
-                </h3>
+  <h3 className="font-semibold text-lg text-white">
+    {place.name}
+  </h3>
 
-                <div className="flex items-center justify-between mt-2 text-sm text-gray-300">
-                  <span>{place.state}</span>
+  <div className="flex items-center justify-between mt-2 text-sm text-white/80">
+    <span>{place.state}</span>
 
-                  <span className="flex items-center gap-1 text-heritage-gold">
-                    <Star size={14} fill="currentColor" />
-                    {place.average_rating || "0.0"}
-                  </span>
-                </div>
+    <span className="flex items-center gap-1 text-heritage-gold">
+      <Star size={14} fill="currentColor" />
+      {place.average_rating || "0.0"}
+    </span>
+  </div>
 
-              </div>
-
+</div>
             </div>
           ))}
         </div>

@@ -160,8 +160,8 @@ const StoryBookCard = ({
             <div className="flex justify-center pt-5">
               <div
                 className="
-                  w-75
-                  h-42
+                  w-76
+                  h-45
                   overflow-hidden
                   border
                   border-yellow-700

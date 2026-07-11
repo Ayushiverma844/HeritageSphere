@@ -646,7 +646,7 @@ places.map((place,index)=>(
 />
 
     {/* Gradient */}
-    <div className="absolute inset-0 bg-linear-to-t from-black via-black/30 to-transparent" />
+    <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
     {/* save Icon */}
     <div className="absolute top-4 right-4">

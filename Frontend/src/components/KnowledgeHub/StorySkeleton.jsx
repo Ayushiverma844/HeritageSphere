@@ -22,8 +22,8 @@ const StorySkeleton = ({ count = 8 }) => {
 
             {/* Image */}
             <div className="flex justify-center pt-5">
-              <div className="w-75
-                h-42  bg-white/10" />
+              <div className="w-76
+                h-45  bg-white/10" />
             </div>
 
             {/* Category */}
