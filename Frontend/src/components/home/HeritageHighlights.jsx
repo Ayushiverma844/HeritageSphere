@@ -37,11 +37,20 @@ const HeritageHighlights = () => {
   // =========================
   // FETCH SAVED ITEMS
   // =========================
-  useEffect(() => {
+ useEffect(() => {
+
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) return;
+
     fetchSavedItems();
-  }, []);
+
+}, []);
 
   const fetchSavedItems = async () => {
+    const token = localStorage.getItem("accessToken");
+
+if (!token) return;
     try {
       const res = await collectionService.getMyCollection();
 

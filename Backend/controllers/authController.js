@@ -299,7 +299,7 @@ if (users.length === 0) {
 // Generate fresh access token
 
         const newAccessToken = generateAccessToken({
-            id:  users[0].id,
+            user_id:  users[0].user_id,
             role:  users[0].role
         });
 

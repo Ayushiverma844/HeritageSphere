@@ -29,6 +29,11 @@ api.interceptors.response.use(
   async (error) => {
 
     const originalRequest = error.config;
+    const token = localStorage.getItem("accessToken");
+
+if (!token) {
+  return Promise.reject(error);
+}
 
     // access token expired
     if (
@@ -70,12 +75,15 @@ api.interceptors.response.use(
 
       catch (err) {
 
-        localStorage.clear();
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
 
-        window.location.href = "/auth";
+  window.location.replace("/auth");
 
-      }
+  return Promise.reject(err);
 
+}
     }
 
     return Promise.reject(error);

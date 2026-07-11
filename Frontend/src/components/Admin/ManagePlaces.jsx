@@ -1686,7 +1686,7 @@ useEffect(() => {
             Places Grid
         ======================= */}
 
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 ">
 
           {places.map((place) => (
 

@@ -32,11 +32,19 @@ const refreshToken = async () => {
 };
 
 const logout = async () => {
-  const response = await api.post(
-    "/auth/logout"
-  );
 
-  return response.data;
+  try {
+
+    await api.post("/auth/logout");
+
+  } finally {
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+
+  }
+
 };
 
 export default {
