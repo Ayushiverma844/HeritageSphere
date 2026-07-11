@@ -13,13 +13,20 @@ const getProfile = async () => {
 // Update Personal Information
 // ==============================
 
-const updateProfile = async (profileData) => {
+const updateProfile = async (formData) => {
+
   const { data } = await api.put(
     "/profile",
-    profileData
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
   );
 
   return data;
+
 };
 
 // ==============================

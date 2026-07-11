@@ -112,7 +112,7 @@ const handleLogout = () => {
 <Link to="/profile">
 
 <button
-className="hidden md:flex h-10 w-10 rounded-full bg-white/5 border border-white/10
+className="hidden md:flex h-13 w-13 rounded-full bg-white/5 border border-white/10
 items-center justify-center text-white
 hover:text-heritage-gold hover:scale-120 transition-all duration-300"
 >
@@ -122,7 +122,7 @@ hover:text-heritage-gold hover:scale-120 transition-all duration-300"
 <img
 src={user.profile_image}
 alt="profile"
-className="h-10 w-10 rounded-full object-cover"
+className="h-13 w-13 rounded-full object-cover"
 />
 
 ) : (

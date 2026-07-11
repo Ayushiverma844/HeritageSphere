@@ -128,14 +128,23 @@ confirm_password: "",
     // Update Profile
     // ==========================
 
-    const profilePayload = {
-      name: formData.name,
-      mobile_number: formData.mobile_number,
-      date_of_birth: formData.date_of_birth,
-      city: formData.city,
-      state: formData.state,
-      country: formData.country,
-    };
+  const profilePayload = new FormData();
+
+profilePayload.append("name", formData.name);
+profilePayload.append("mobile_number", formData.mobile_number);
+profilePayload.append("date_of_birth", formData.date_of_birth);
+profilePayload.append("city", formData.city);
+profilePayload.append("state", formData.state);
+profilePayload.append("country", formData.country);
+
+if (selectedImage) {
+
+  profilePayload.append(
+    "profile_image",
+    selectedImage
+  );
+
+}
 
     await profileService.updateProfile(profilePayload);
     const updated = await profileService.getProfile();
@@ -273,11 +282,7 @@ localStorage.setItem(
 
         <img
 
-          src={
-            user.profile_image
-              ? `http://localhost:5000/uploads/${user.profile_image}`
-              : img
-          }
+          src={user.profile_image || img}
 
           alt={user.name}
 
@@ -739,9 +744,7 @@ Go to Admin Dashboard
           src={
 previewImage
 ||
-(user.profile_image
-? `http://localhost:5000/uploads/${user.profile_image}`
-: img)
+(user.profile_image || img)
 }
           alt="Profile"
           className="

@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
-
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 // ==========================================
 // Get Logged In User Profile
 // ==========================================
@@ -88,6 +89,10 @@ const getProfile = async (req, res) => {
 // ==========================================
 // Update Profile
 // ==========================================
+// ==========================================
+// Update Profile
+// ==========================================
+
 const updateProfile = async (req, res) => {
 
   try {
@@ -100,7 +105,7 @@ const updateProfile = async (req, res) => {
       date_of_birth,
       city,
       state,
-      country
+      country,
     } = req.body;
 
     name = name?.trim();
@@ -108,11 +113,14 @@ const updateProfile = async (req, res) => {
     if (!name) {
       return res.status(400).json({
         success: false,
-        message: "Name is required"
+        message: "Name is required",
       });
     }
 
-    // Check user exists
+    // ==============================
+    // Check User Exists
+    // ==============================
+
     const [existing] = await db.query(
       `
       SELECT user_id
@@ -125,9 +133,49 @@ const updateProfile = async (req, res) => {
     if (existing.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
+
+    // ==============================
+    // Upload Image (Optional)
+    // ==============================
+
+    let profileImage = null;
+
+    if (req.file) {
+
+      const uploadResult = await new Promise(
+        (resolve, reject) => {
+
+          const stream =
+            cloudinary.uploader.upload_stream(
+              {
+                folder: "heritagesphere/profile-images",
+              },
+              (error, result) => {
+
+                if (error) return reject(error);
+
+                resolve(result);
+
+              }
+            );
+
+          streamifier
+            .createReadStream(req.file.buffer)
+            .pipe(stream);
+
+        }
+      );
+
+      profileImage = uploadResult.secure_url;
+
+    }
+
+    // ==============================
+    // Update Profile
+    // ==============================
 
     await db.query(
       `
@@ -138,7 +186,8 @@ const updateProfile = async (req, res) => {
         date_of_birth = ?,
         city = ?,
         state = ?,
-        country = ?
+        country = ?,
+        profile_image = COALESCE(?, profile_image)
       WHERE user_id = ?
       `,
       [
@@ -148,11 +197,15 @@ const updateProfile = async (req, res) => {
         city || null,
         state || null,
         country || null,
-        userId
+        profileImage,
+        userId,
       ]
     );
 
-    // Return updated user
+    // ==============================
+    // Return Updated User
+    // ==============================
+
     const [updatedUser] = await db.query(
       `
       SELECT
@@ -176,7 +229,7 @@ const updateProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      user: updatedUser[0]
+      user: updatedUser[0],
     });
 
   } catch (error) {
@@ -185,12 +238,12 @@ const updateProfile = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
 
   }
-};
 
+};
 // ==========================================
 // Change Password
 // ==========================================

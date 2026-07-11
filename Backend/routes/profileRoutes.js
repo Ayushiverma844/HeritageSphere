@@ -4,6 +4,7 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const profileController = require("../controllers/profileController");
+const upload = require("../middleware/upload");
 
 router.get(
   "/",
@@ -14,6 +15,7 @@ router.get(
 router.put(
   "/",
   authMiddleware,
+  upload.single("profile_image"),
   profileController.updateProfile
 );
 
