@@ -192,17 +192,23 @@ const MyCollection = () => {
               {/* Main card */}
               <div className="relative lg:w-2/3 bg-white/5 backdrop-blur-md border border-heritage-gold/20 rounded-3xl overflow-hidden hover:border-heritage-gold/50 transition-all duration-300">
 
-                <div className="flex flex-col md:flex-row">
+                <div className="flex flex-col md:flex-row md:items-center ">
 
                   {/* Image */}
                   <img
                     src={item.cover_image || "/fallback.jpg"}
                     alt={item.name || item.title || "item"}
-                    className="md:w-72 h-60 object-cover"
+                    className="md:w-72
+md:min-w-[18rem]
+h-65
+object-cover
+shrink-0
+rounded-2xl
+md:m-3"
                   />
 
                   {/* Content */}
-                  <div className="p-6 flex-1">
+                  <div className="p-5 flex-1">
 
                     <h3 className="text-2xl font-bold">
                       {item.item_type === "PLACE"
@@ -234,11 +240,18 @@ const MyCollection = () => {
                       </div>
                     )}
 
-                    <p className="text-gray-400 mt-5 leading-7">
-                      {item.item_type === "PLACE"
-                        ? item.short_description || "No description available"
-                        : item.summary}
-                    </p>
+ <p
+  className="
+  text-gray-400
+  mt-5
+  leading-5
+  line-clamp-3
+  "
+>
+  {item.item_type === "PLACE"
+    ? item.short_description || "No description available"
+    : item.summary}
+</p>
 
                     <button
                       onClick={() =>
