@@ -279,10 +279,28 @@ const refreshToken = async (req, res) => {
             token,
             process.env.JWT_REFRESH_SECRET
         );
+        // Check user still exists
+const [users] = await db.query(
+    `
+    SELECT user_id, role
+    FROM users
+    WHERE user_id = ?
+    `,
+    [decoded.id]
+);
+
+if (users.length === 0) {
+    return res.status(401).json({
+        success: false,
+        message: "User not found"
+    });
+}
+
+// Generate fresh access token
 
         const newAccessToken = generateAccessToken({
-            user_id: decoded.user_id,
-            role: decoded.role
+            id:  users[0].id,
+            role:  users[0].role
         });
 
         res.json({

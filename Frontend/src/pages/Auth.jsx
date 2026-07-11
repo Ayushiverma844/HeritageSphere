@@ -66,7 +66,7 @@ if (!formData.password.trim()) {
 
      login({
   accessToken: data.accessToken,
-  refreshToken: data.refreshTokenValue,
+  refreshToken: data.refreshToken,
   user: data.user,
 });
 
@@ -106,7 +106,7 @@ if (formData.password.length < 6) {
 
      login({
   accessToken: data.accessToken,
-  refreshToken: data.refreshTokenValue,
+  refreshToken: data.refreshToken,
   user: data.user,
 });
 

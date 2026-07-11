@@ -78,6 +78,7 @@ const AdminDashboard = () => {
     const [admin, setAdmin] = useState({
   name: "",
   role: "",
+   image: "",
 });
 
   const [loading, setLoading] = useState(true);
@@ -112,6 +113,7 @@ const loadAdminProfile = async () => {
     setAdmin({
       name: data.user.name,
       role: data.user.role,
+      image: data.user.profile_image,
     });
   } catch (err) {
     console.log(err);
@@ -394,14 +396,14 @@ return (
               h-24
               w-24
               rounded-full
-              border-2
+              border
               border-heritage-gold
               p-1
               "
             >
               <img
-                src="/admin.jpg"
-                alt="Admin"
+               src={admin.image || "/admin.jpg"}
+  alt={admin.name}
                 className="
                 h-full
                 w-full
