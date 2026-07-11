@@ -20,7 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import categoryService from "../../services/categoryService";
 import searchService from "../../services/searchService";
-import img from "../../assests/bg2.jpg";
+import img from "../../assests/bg.jpg";
 
 
 //  icons for category

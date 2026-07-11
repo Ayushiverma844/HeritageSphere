@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import img from "../assests/1.jpg";
+import img from "../assests/profile.png";
 
 import profileService from "../services/profileService";
 

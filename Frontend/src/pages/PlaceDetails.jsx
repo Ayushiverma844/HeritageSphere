@@ -17,7 +17,7 @@ import {
   Bookmark,
 } from "lucide-react";
 
-import heroImg from "../assests/1.jpg";
+
 import placeService from "../services/placeService";
 import reviewService from "../services/reviewService";
 import collectionService from "../services/collectionService";
@@ -283,7 +283,7 @@ const handleDeleteReview = async () => {
     <section className="relative h-125 overflow-hidden">
 
       <img
-        src={place.image_url || heroImg}
+        src={place.image_url }
         alt={place.name}
         className="w-full h-full object-cover"
       />
@@ -649,7 +649,7 @@ How To Reach
                       >
 
                         <img
-                          src={item.image_url || heroImg}
+                          src={item.image_url }
                           alt={item.name}
                           className="h-40 w-full object-cover"
                         />
