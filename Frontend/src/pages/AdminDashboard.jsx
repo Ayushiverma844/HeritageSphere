@@ -22,6 +22,7 @@ import {
   getDashboardStats,
   getDashboardAnalytics,
 } from "../services/adminDashboardService";
+import profileService from "../services/profileService";
 
 
 
@@ -52,7 +53,7 @@ const actions = [
   {
     title: "User Management",
     icon: Users,
-    path: "/admin/users",
+    path: "/admin/manage-users",
     description: "View users and manage their accounts.",
     color: "from-green-500/20 to-emerald-500/10",
     badge: "Users",
@@ -74,6 +75,10 @@ const AdminDashboard = () => {
 
   const [showCategoryModal, setShowCategoryModal] =
     useState(false);
+    const [admin, setAdmin] = useState({
+  name: "",
+  role: "",
+});
 
   const [loading, setLoading] = useState(true);
 
@@ -90,6 +95,28 @@ const AdminDashboard = () => {
   // ==========================================
   // Dashboard Data
   // ==========================================
+  const getGreeting = () => {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  if (hour < 21) return "Good Evening";
+
+  return "Welcome Back";
+};
+
+const loadAdminProfile = async () => {
+  try {
+    const data = await profileService.getProfile();
+
+    setAdmin({
+      name: data.user.name,
+      role: data.user.role,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const loadDashboard = async () => {
 
@@ -174,12 +201,10 @@ const AdminDashboard = () => {
   // Load Dashboard
   // ==========================================
 
-  useEffect(() => {
-
-    loadDashboard();
-
-  }, []);
-
+ useEffect(() => {
+  loadDashboard();
+  loadAdminProfile();
+}, []);
   // ==========================================
   // Loading
   // ==========================================
@@ -327,9 +352,9 @@ return (
           HeritageSphere Admin
         </span>
 
-        <h1 className="text-5xl font-bold text-white mt-5">
-          Dashboard
-        </h1>
+       <h1 className="text-5xl font-bold text-white mt-5">
+  {getGreeting()}, {admin.name} 👋
+</h1>
 
         <p className="text-gray-400 mt-3">
           Welcome back! Manage places, stories,
@@ -387,12 +412,14 @@ return (
             </div>
 
             <h2 className="mt-4 text-xl font-semibold text-white">
-              Admin User
+              {admin.name}
             </h2>
 
-            <p className="text-gray-400 text-sm">
-              Super Administrator
-            </p>
+           <p className="text-gray-400 text-sm capitalize">
+  {admin.role === "super_admin"
+    ? "Super Administrator"
+    : "Administrator"}
+</p>
 
             <div className="mt-3 flex items-center gap-2">
 

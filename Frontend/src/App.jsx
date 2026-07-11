@@ -14,6 +14,7 @@ import AdminManagePlaces from "./components/Admin/ManagePlaces";
 import AdminManageStories from "./components/Admin/ManageStories";
 import AdminManageCategories from "./components/Admin/ManageCategories";
 import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
+import ManageUsers from "./components/Admin/ManageUser"
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -79,6 +80,7 @@ const App = () => {
   <Route path="/admin/manage-stories" element={<AdminManageStories />} />
   <Route path="/admin/manage-categories" element={<AdminManageCategories />} />
   <Route path="/admin/ai-story-generator" element={<AiStoryGenerator />} />
+  <Route path="/admin/manage-users" element={<ManageUsers />} />
 </Routes>
 </div>
   )

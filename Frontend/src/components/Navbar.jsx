@@ -157,7 +157,7 @@ Login
 )}
 
 {/* admin dashboard */}
-{user?.role === "admin" && (
+{(user?.role === "admin"  || user?.role === "super_admin") && (
 
 <Link
 to="/admin"
@@ -304,7 +304,7 @@ Login
 )}
 
 {/* admin dashboard */}
-{user?.role === "admin" && (
+{(user?.role === "admin"  || user?.role === "super_admin") && (
 
 <Link
 

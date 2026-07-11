@@ -138,6 +138,15 @@ confirm_password: "",
     };
 
     await profileService.updateProfile(profilePayload);
+    const updated = await profileService.getProfile();
+
+setUser(updated.user);
+
+localStorage.setItem(
+  "user",
+  JSON.stringify(updated.user)
+);
+    
 
     // ==========================
     // Change Password (Optional)
@@ -290,11 +299,65 @@ confirm_password: "",
 
         </h1>
 
-        <p className="mt-2 text-gray-400 capitalize">
+       <div className="mt-3">
 
-          {user.role}
+{user.role==="super_admin" ? (
 
-        </p>
+<span
+className="
+px-4
+py-1
+rounded-full
+bg-red-500/20
+text-red-400
+border
+border-red-500/30
+text-sm
+font-semibold
+"
+>
+Super Admin
+</span>
+
+) : user.role==="admin" ? (
+
+<span
+className="
+px-4
+py-1
+rounded-full
+bg-heritage-gold/20
+text-heritage-gold
+border
+border-heritage-gold/30
+text-sm
+font-semibold
+"
+>
+Administrator
+</span>
+
+) : (
+
+<span
+className="
+px-4
+py-1
+rounded-full
+bg-blue-500/20
+text-blue-400
+border
+border-blue-500/30
+text-sm
+font-semibold
+"
+>
+Explorer
+</span>
+
+)}
+
+</div>
 
         <button
 
@@ -588,6 +651,32 @@ confirm_password: "",
           </div>
 
         </div>
+        {(user.role==="admin" ||
+user.role==="super_admin") && (
+
+<button
+
+onClick={()=>navigate("/admin")}
+
+className="
+mt-8
+w-full
+py-3
+rounded-xl
+bg-heritage-gold
+text-black
+font-semibold
+hover:scale-105
+transition-all
+"
+
+>
+
+Go to Admin Dashboard
+
+</button>
+
+)}
 
       </div>
 
@@ -647,7 +736,13 @@ confirm_password: "",
 
         <img
           // src={previewImage || profileImage}
-          src = {previewImage}
+          src={
+previewImage
+||
+(user.profile_image
+? `http://localhost:5000/uploads/${user.profile_image}`
+: img)
+}
           alt="Profile"
           className="
           w-32
