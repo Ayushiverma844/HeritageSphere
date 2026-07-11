@@ -16,6 +16,7 @@ import AdminManageCategories from "./components/Admin/ManageCategories";
 import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
 import ManageUsers from "./components/Admin/ManageUser"
 import NotFound from "./pages/NotFound";
+import AdminRoute from "./routes/AdminRoute";
 
 const App = () => {
   return (
@@ -75,12 +76,12 @@ const App = () => {
 
   <Route path="/profile" element={<Profile />} />
 
-  <Route path="/admin" element={<Admin />} />
-  <Route path="/admin/manage-places" element={<AdminManagePlaces />} />
-  <Route path="/admin/manage-stories" element={<AdminManageStories />} />
-  <Route path="/admin/manage-categories" element={<AdminManageCategories />} />
-  <Route path="/admin/ai-story-generator" element={<AiStoryGenerator />} />
-  <Route path="/admin/manage-users" element={<ManageUsers />} />
+  <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+  <Route path="/admin/manage-places" element={<AdminRoute><AdminManagePlaces /></AdminRoute>} />
+  <Route path="/admin/manage-stories" element={<AdminRoute><AdminManageStories /></AdminRoute>} />
+  <Route path="/admin/manage-categories" element={<AdminRoute><AdminManageCategories /></AdminRoute>} />
+  <Route path="/admin/ai-story-generator" element={<AdminRoute><AiStoryGenerator /></AdminRoute>} />
+  <Route path="/admin/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
 </Routes>
 </div>
   )

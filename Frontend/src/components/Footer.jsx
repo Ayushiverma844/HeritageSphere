@@ -22,12 +22,9 @@ const Footer = () => {
           {/* Brand */}
 
           <div>
-            <div className="flex items-center gap-3 ">
-              <div className="h-10 w-10 rounded-xl bg-heritage-gold/10 flex items-center justify-center">
-                <Landmark
-                  size={22}
-                  className="text-heritage-gold"
-                />
+            <div className="flex items-center gap-4 ">
+              <div className="h-9 w-9 rounded-xl bg-heritage-gold/5 flex items-center justify-center">
+                <img src="Logo.png" alt="" />
               </div>
 
               <h2 className="text-xl font-bold text-white">
@@ -35,7 +32,7 @@ const Footer = () => {
               </h2>
             </div>
 
-            <p className="text-gray-400 text-sm mt-4 leading-5">
+            <p className="text-gray-400 text-sm mt-6 leading-5">
               Discover India's rich cultural heritage,
               historical places and timeless stories.
             </p>
