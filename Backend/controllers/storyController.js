@@ -203,10 +203,13 @@ message:error.message
 // ==========================================
 
 const createStory = async (req, res) => {
+
   let connection = null;
   let coverImage = null;
+  const uploadedChapterImages = [];
 
   try {
+
     const {
       place_id,
       category_id,
@@ -232,14 +235,17 @@ const createStory = async (req, res) => {
 
     try {
       parsedChapters = JSON.parse(chapters);
-    } catch {
+    } catch (error) {
       return res.status(400).json({
         success: false,
         message: "Invalid chapters format.",
       });
     }
 
-    if (!Array.isArray(parsedChapters) || parsedChapters.length === 0) {
+    if (
+      !Array.isArray(parsedChapters) ||
+      parsedChapters.length === 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "At least one chapter is required.",
@@ -250,14 +256,24 @@ const createStory = async (req, res) => {
     // Upload Cover Image
     // ==========================
 
-   const coverFile = req.files?.cover_image?.[0];
+    const coverFile =
+      req.files?.cover_image?.[0];
 
-if (coverFile) {
-  coverImage = await uploadImage(
-    coverFile.buffer,
-    "stories"
-  );
-}
+    if (coverFile) {
+
+      coverImage = await uploadImage(
+        coverFile.buffer,
+        "stories"
+      );
+
+    }
+
+    // ==========================
+    // Chapter Images
+    // ==========================
+
+    const chapterFiles =
+      req.files?.chapterImages || [];
 
     // ==========================
     // Generate Slug
@@ -272,7 +288,7 @@ if (coverFile) {
       `
       SELECT story_id
       FROM stories
-      WHERE slug=?
+      WHERE slug = ?
       `,
       [slug]
     );
@@ -293,48 +309,105 @@ if (coverFile) {
     // Insert Story
     // ==========================
 
-    const [storyResult] = await connection.query(
-      `
-      INSERT INTO stories
-      (
-        place_id,
-        category_id,
-        title,
-        slug,
-        summary,
-        cover_image,
-        public_id,
-        total_chapters,
-        source_name,
-        source_url
-      )
-      VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        place_id || null,
-        category_id,
-        title,
-        slug,
-        summary || "",
-        coverImage ? coverImage.secure_url : null,
-        coverImage ? coverImage.public_id : null,
-        parsedChapters.length,
-        source_name || "",
-        source_url || "",
-      ]
-    );
+    const [storyResult] =
+      await connection.query(
+        `
+        INSERT INTO stories
+        (
+          place_id,
+          category_id,
+          title,
+          slug,
+          summary,
+          cover_image,
+          public_id,
+          total_chapters,
+          source_name,
+          source_url
+        )
+        VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          place_id || null,
+          category_id,
+          title,
+          slug,
+          summary || "",
+          coverImage
+            ? coverImage.secure_url
+            : null,
+          coverImage
+            ? coverImage.public_id
+            : null,
+          parsedChapters.length,
+          source_name || "",
+          source_url || "",
+        ]
+      );
 
     const storyId = storyResult.insertId;
 
-    // ==========================
+       // ==========================
     // Insert Chapters
     // ==========================
 
     for (let i = 0; i < parsedChapters.length; i++) {
+
       const chapter = parsedChapters[i];
 
+      let imageUrl = "";
+      let publicId = "";
+
+      // ==========================
+      // Upload Chapter Image
+      // ==========================
+
+      if (
+        chapter.imageIndex !== null &&
+        chapter.imageIndex !== undefined
+      ) {
+
+        const file =
+          chapterFiles[chapter.imageIndex];
+
+        if (file) {
+
+          const uploaded =
+            await uploadImage(
+              file.buffer,
+              "chapters"
+            );
+
+          imageUrl = uploaded.secure_url;
+          publicId = uploaded.public_id;
+
+          uploadedChapterImages.push(
+            publicId
+          );
+
+        }
+
+      }
+
+      // Existing Image (Edit Support)
+
+      else {
+
+        imageUrl =
+          chapter.image_url || "";
+
+        publicId =
+          chapter.public_id || "";
+
+      }
+
+      // ==========================
+      // Insert Chapter
+      // ==========================
+
       await connection.query(
+
         `
         INSERT INTO story_chapters
         (
@@ -342,54 +415,108 @@ if (coverFile) {
           chapter_number,
           title,
           content,
-          quote
+          quote,
+          image_url,
+          public_id
         )
         VALUES
-        (?, ?, ?, ?, ?)
+        (
+          ?, ?, ?, ?, ?, ?, ?
+        )
         `,
+
         [
           storyId,
-          i + 1,
+          chapter.chapter_number || (i + 1),
           chapter.title || "",
           chapter.content || "",
           chapter.quote || "",
+          imageUrl,
+          publicId,
         ]
+
       );
+
     }
 
     // ==========================
-    // Commit
+    // Commit Transaction
     // ==========================
 
     await connection.commit();
 
     connection.release();
     connection = null;
-
-    return res.status(201).json({
+        return res.status(201).json({
       success: true,
       message: "Story created successfully.",
       storyId,
     });
 
   } catch (error) {
+
     console.log(error);
+
+    // ==========================
+    // Rollback
+    // ==========================
 
     if (connection) {
       await connection.rollback();
       connection.release();
+      connection = null;
     }
 
+    // ==========================
+    // Delete Uploaded Cover
+    // ==========================
+
     if (coverImage?.public_id) {
-      await deleteImage(coverImage.public_id);
+      try {
+        await deleteImage(
+          coverImage.public_id
+        );
+      } catch (err) {
+        console.log(
+          "Cover cleanup failed:",
+          err.message
+        );
+      }
+    }
+
+    // ==========================
+    // Delete Uploaded Chapter Images
+    // ==========================
+
+    for (const publicId of uploadedChapterImages) {
+
+      try {
+
+        await deleteImage(publicId);
+
+      } catch (err) {
+
+        console.log(
+          "Chapter cleanup failed:",
+          err.message
+        );
+
+      }
+
     }
 
     return res.status(500).json({
+
       success: false,
+
       message: error.message,
+
     });
+
   }
+
 };
+
 
 
 // ==========================================
@@ -398,53 +525,35 @@ if (coverFile) {
 // ==========================================
 
 const updateStory = async (req, res) => {
+  
 
   let connection = null;
-
   let newCover = null;
+  const uploadedChapterImages = [];
 
   try {
 
     const storyId = req.params.id;
 
     const {
-
       place_id,
-
       category_id,
-
       title,
-
       summary,
-
       source_name,
-
       source_url,
-
-      chapters
-
+      chapters,
     } = req.body;
 
     // ==========================
     // Validation
     // ==========================
 
-    if (
-
-      !category_id ||
-
-      !title ||
-
-      !chapters
-
-    ) {
+    if (!category_id || !title || !chapters) {
 
       return res.status(400).json({
-
         success: false,
-
-        message: "Required fields are missing."
-
+        message: "Required fields are missing.",
       });
 
     }
@@ -455,34 +564,23 @@ const updateStory = async (req, res) => {
 
       parsedChapters = JSON.parse(chapters);
 
-    }
-
-    catch {
+    } catch (error) {
 
       return res.status(400).json({
-
         success: false,
-
-        message: "Invalid chapters format."
-
+        message: "Invalid chapters format.",
       });
 
     }
 
     if (
-
       !Array.isArray(parsedChapters) ||
-
       parsedChapters.length === 0
-
     ) {
 
       return res.status(400).json({
-
         success: false,
-
-        message: "At least one chapter is required."
-
+        message: "At least one chapter is required.",
       });
 
     }
@@ -492,82 +590,82 @@ const updateStory = async (req, res) => {
     // ==========================
 
     const [story] = await db.query(
-
       `
       SELECT
-
         cover_image,
-
         public_id,
-
         slug
-
       FROM stories
-
       WHERE story_id=?
       `,
-
       [storyId]
-
     );
 
     if (story.length === 0) {
 
       return res.status(404).json({
-
         success: false,
-
-        message: "Story not found."
-
+        message: "Story not found.",
       });
 
     }
 
     // ==========================
-    // Upload New Cover
+    // Existing Chapters
     // ==========================
 
-const coverFile = req.files?.cover_image?.[0];
+    const [oldChapters] = await db.query(
+      `
+      SELECT
+        chapter_id,
+        public_id
+      FROM story_chapters
+      WHERE story_id=?
+      ORDER BY chapter_number
+      `,
+      [storyId]
+    );
 
-if (coverFile) {
-  newCover = await uploadImage(
-    coverFile.buffer,
-    "stories"
-  );
-}
+    // ==========================
+    // Upload Cover
+    // ==========================
+
+    const coverFile =
+      req.files?.cover_image?.[0];
+
+    if (coverFile) {
+
+      newCover = await uploadImage(
+        coverFile.buffer,
+        "stories"
+      );
+
+    }
+
+    // ==========================
+    // Chapter Files
+    // ==========================
+
+    const chapterFiles =
+      req.files?.chapterImages || [];
 
     // ==========================
     // Slug
     // ==========================
 
     let slug = slugify(title, {
-
       lower: true,
-
-      strict: true
-
+      strict: true,
     });
 
     const [slugExists] = await db.query(
-
       `
       SELECT story_id
-
       FROM stories
-
       WHERE slug=?
-
       AND story_id!=?
       `,
-
-      [
-
-        slug,
-
-        storyId
-
-      ]
-
+      [slug, storyId]
     );
 
     if (slugExists.length > 0) {
@@ -589,146 +687,152 @@ if (coverFile) {
     // ==========================
 
     await connection.query(
-
       `
       UPDATE stories
-
       SET
-
         place_id=?,
-
         category_id=?,
-
         title=?,
-
         slug=?,
-
         summary=?,
-
         cover_image=?,
-
         public_id=?,
-
         total_chapters=?,
-
         source_name=?,
-
         source_url=?
-
       WHERE story_id=?
       `,
-
       [
-
         place_id || null,
-
         category_id,
-
         title,
-
         slug,
-
         summary || "",
-
         newCover
-
           ? newCover.secure_url
-
           : story[0].cover_image,
-
         newCover
-
           ? newCover.public_id
-
           : story[0].public_id,
-
         parsedChapters.length,
-
         source_name || "",
-
         source_url || "",
-
-        storyId
-
+        storyId,
       ]
-
     );
 
-    // ==========================
-    // Remove Old Chapters
+       // ==========================
+    // Delete Old Chapters
     // ==========================
 
     await connection.query(
-
       `
-      DELETE
-
-      FROM story_chapters
-
+      DELETE FROM story_chapters
       WHERE story_id=?
       `,
-
       [storyId]
-
     );
 
     // ==========================
     // Insert New Chapters
     // ==========================
 
-    for (
-
-      let i = 0;
-
-      i < parsedChapters.length;
-
-      i++
-
-    ) {
+    for (let i = 0; i < parsedChapters.length; i++) {
 
       const chapter = parsedChapters[i];
 
-      await connection.query(
+      let imageUrl = chapter.image_url || "";
+      let publicId = chapter.public_id || "";
 
+      // ==========================
+      // Upload New Chapter Image
+      // ==========================
+
+      if (
+        chapter.imageIndex !== null &&
+        chapter.imageIndex !== undefined
+      ) {
+
+        // Delete previous image (if exists)
+
+        if (
+          oldChapters[i] &&
+          oldChapters[i].public_id
+        ) {
+
+          await deleteImage(
+            oldChapters[i].public_id
+          );
+
+        }
+
+        const file =
+          chapterFiles[chapter.imageIndex];
+
+        if (file) {
+
+          const uploaded =
+            await uploadImage(
+              file.buffer,
+              "chapters"
+            );
+
+          imageUrl =
+            uploaded.secure_url;
+
+          publicId =
+            uploaded.public_id;
+
+          uploadedChapterImages.push(
+            publicId
+          );
+
+        }
+
+      }
+
+      // ==========================
+      // Keep Existing Image
+      // ==========================
+
+      else if (oldChapters[i]) {
+
+        imageUrl =
+          chapter.image_url || "";
+
+        publicId =
+          chapter.public_id || "";
+
+      }
+
+      // ==========================
+      // Insert Chapter
+      // ==========================
+
+      await connection.query(
         `
         INSERT INTO story_chapters
         (
-
           story_id,
-
           chapter_number,
-
           title,
-
           content,
-
-          quote
-
+          quote,
+          image_url,
+          public_id
         )
-
         VALUES
-
-        (
-
-          ?,?,?,?,?
-
-        )
+        (?, ?, ?, ?, ?, ?, ?)
         `,
-
         [
-
           storyId,
-
-          i + 1,
-
+          chapter.chapter_number || (i + 1),
           chapter.title || "",
-
           chapter.content || "",
-
-          chapter.quote || ""
-
+          chapter.quote || "",
+          imageUrl,
+          publicId,
         ]
-
       );
 
     }
@@ -740,7 +844,6 @@ if (coverFile) {
     await connection.commit();
 
     connection.release();
-
     connection = null;
 
     // ==========================
@@ -748,54 +851,79 @@ if (coverFile) {
     // ==========================
 
     if (
-
       newCover &&
-
       story[0].public_id
-
     ) {
 
       await deleteImage(
-
         story[0].public_id
-
       );
 
     }
 
-    return res.json({
-
+     return res.json({
       success: true,
-
-      message: "Story updated successfully."
-
+      message: "Story updated successfully.",
     });
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.log(error);
+
+    // ==========================
+    // Rollback Transaction
+    // ==========================
 
     if (connection) {
 
       await connection.rollback();
-
       connection.release();
+      connection = null;
 
     }
 
-    if (
+    // ==========================
+    // Delete Newly Uploaded Cover
+    // ==========================
 
-      newCover?.public_id
+    if (newCover?.public_id) {
 
-    ) {
+      try {
 
-      await deleteImage(
+        await deleteImage(
+          newCover.public_id
+        );
 
-        newCover.public_id
+      } catch (err) {
 
-      );
+        console.log(
+          "Cover cleanup failed:",
+          err.message
+        );
+
+      }
+
+    }
+
+    // ==========================
+    // Delete Newly Uploaded
+    // Chapter Images
+    // ==========================
+
+    for (const publicId of uploadedChapterImages) {
+
+      try {
+
+        await deleteImage(publicId);
+
+      } catch (err) {
+
+        console.log(
+          "Chapter cleanup failed:",
+          err.message
+        );
+
+      }
 
     }
 
@@ -803,13 +931,14 @@ if (coverFile) {
 
       success: false,
 
-      message: error.message
+      message: error.message,
 
     });
 
   }
 
 };
+
 
 
 // ==========================================
@@ -819,80 +948,75 @@ if (coverFile) {
 
 const deleteStory = async (req, res) => {
 
-  let connection;
+  let connection = null;
 
   try {
 
     const storyId = req.params.id;
 
     // ==========================
-    // Check Story
+    // Story
     // ==========================
 
     const [story] = await db.query(
-
       `
       SELECT
-
         public_id
-
       FROM stories
-
-      WHERE story_id=?
-
+      WHERE story_id = ?
       `,
       [storyId]
-
     );
 
     if (story.length === 0) {
 
       return res.status(404).json({
-
         success: false,
-
-        message: "Story not found."
-
+        message: "Story not found.",
       });
 
     }
 
-    connection =
-      await db.getConnection();
-
-    await connection.beginTransaction();
-
     // ==========================
-    // Delete Chapters
-    // (Skip if FK CASCADE)
+    // Chapter Images
     // ==========================
 
-    await connection.query(
-
+    const [chapters] = await db.query(
       `
-      DELETE
+      SELECT
+        public_id
       FROM story_chapters
-      WHERE story_id=?
+      WHERE story_id = ?
       `,
-
       [storyId]
-
     );
 
     // ==========================
-    // Delete Story
+    // Transaction
     // ==========================
 
+    connection = await db.getConnection();
+
+    await connection.beginTransaction();
+
+    // Delete Chapters
+
     await connection.query(
-
       `
-      DELETE
-      FROM stories
-      WHERE story_id=?
+      DELETE FROM story_chapters
+      WHERE story_id = ?
       `,
-
       [storyId]
+    );
 
+    // Delete Story
+
+    await connection.query(
+      `
+      DELETE FROM stories
+      WHERE story_id = ?
+      `,
+      [storyId]
     );
 
     await connection.commit();
@@ -906,20 +1030,53 @@ const deleteStory = async (req, res) => {
 
     if (story[0].public_id) {
 
-      await deleteImage(
+      try {
 
-        story[0].public_id
+        await deleteImage(
+          story[0].public_id
+        );
 
-      );
+      } catch (err) {
+
+        console.log(
+          "Cover delete failed:",
+          err.message
+        );
+
+      }
 
     }
 
-    res.json({
+    // ==========================
+    // Delete Chapter Images
+    // ==========================
+
+    for (const chapter of chapters) {
+
+      if (!chapter.public_id) continue;
+
+      try {
+
+        await deleteImage(
+          chapter.public_id
+        );
+
+      } catch (err) {
+
+        console.log(
+          "Chapter image delete failed:",
+          err.message
+        );
+
+      }
+
+    }
+
+    return res.json({
 
       success: true,
 
-      message:
-        "Story deleted successfully."
+      message: "Story deleted successfully.",
 
     });
 
@@ -932,16 +1089,15 @@ const deleteStory = async (req, res) => {
     if (connection) {
 
       await connection.rollback();
-
       connection.release();
 
     }
 
-    res.status(500).json({
+    return res.status(500).json({
 
       success: false,
 
-      message: error.message
+      message: error.message,
 
     });
 

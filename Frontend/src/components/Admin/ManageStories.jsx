@@ -642,31 +642,53 @@ setPagination(res.pagination);
 
       );
 
-      // ======================
-      // Chapters
-      // ======================
-const chapterData = chapters.map((chapter, index) => ({
+ // ======================
+// Chapters
+// ======================
 
-  chapter_number: chapter.chapter_number,
+const chapterData = [];
 
-  title: chapter.title,
+let imageIndex = 0;
 
-  content: chapter.content,
+chapters.forEach((chapter) => {
 
-  quote: chapter.quote,
+  chapterData.push({
 
-  imageIndex: chapter.image ? index : null,
+    chapter_number: chapter.chapter_number,
 
-  image_url: chapter.image_url || "",
+    title: chapter.title,
 
-  public_id: chapter.public_id || ""
+    content: chapter.content,
 
-}));
+    quote: chapter.quote,
+
+    imageIndex: chapter.image ? imageIndex : null,
+
+    image_url: chapter.image_url || "",
+
+    public_id: chapter.public_id || ""
+
+  });
+
+  if (chapter.image) {
+
+    formData.append(
+      "chapterImages",
+      chapter.image
+    );
+
+    imageIndex++;
+
+  }
+
+});
 
 formData.append(
   "chapters",
   JSON.stringify(chapterData)
 );
+
+
 
 chapters.forEach((chapter) => {
 

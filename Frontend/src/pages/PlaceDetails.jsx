@@ -280,7 +280,7 @@ const handleDeleteReview = async () => {
 
     {/* ================= Hero ================= */}
 
-    <section className="relative h-125 overflow-hidden">
+    <section className="relative h-130 overflow-hidden">
 
       <img
         src={place.image_url }
@@ -288,7 +288,7 @@ const handleDeleteReview = async () => {
         className="w-full h-full object-cover"
       />
 
-      <div className="absolute inset-0 bg-black/70" />
+      <div className="absolute inset-0 bg-black/50" />
 
       <Link
         to="/places"

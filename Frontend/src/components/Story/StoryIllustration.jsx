@@ -1,5 +1,4 @@
 const StoryIllustration = ({ story, chapter }) => {
-
   const image =
     chapter?.image_url ||
     story?.cover_image ||
@@ -9,64 +8,89 @@ const StoryIllustration = ({ story, chapter }) => {
     <div
       className="
       relative
-      bg-linear-to-l
+      h-full
+      bg-linear
+      -to-l
       from-[#ecdcb8]
       to-[#f3e6c9]
-      p-6
-      md:p-10
+      px-4
+      sm:px-6
+      lg:px-8
+      pt-4
+      sm:pt-5
+      lg:pt-6
+      pb-4
+      sm:pb-5
+      lg:pb-6
       flex
       flex-col
-      justify-center
-      items-center
       "
     >
-      {/* Right Page Curve Shadow */}
-
+      {/* Left Page Shadow */}
       <div
         className="
         absolute
         top-0
         left-0
-        w-12
+        w-10
+        lg:w-12
         h-full
-        bg-linear-to-r
+        bg-linear
+        -to-r
         from-black/10
         to-transparent
         pointer-events-none
         "
       />
 
-      {/* Illustration */}
+      {/* Image */}
+      <div className="flex justify-center">
+        <img
+          src={image}
+          alt={chapter?.title || story?.title}
+          className="
+          w-full
+          rounded-2xl
+          border
+          border-black/10
+          object-cover
+          object-top
 
-      <img
-        src={image}
-        alt={chapter?.title || story?.title}
-        className="
-        w-full
-        max-w-md
-        h-70
-        md:h-105
-        object-cover
-        rounded-2xl
-        shadow-[0_10px_30px_rgba(0,0,0,0.25)]
-        border
-        border-black/10
-        transition-all
-        duration-500
-        hover:scale-[1.02]
-        "
-      />
+          h-64
+          sm:h-80
+          md:h-105
+          lg:h-125
+          xl:h-135
+
+          shadow-[0_15px_35px_rgba(0,0,0,0.25)]
+          transition-all
+          duration-500
+          hover:scale-[1.015]
+          "
+        />
+      </div>
 
       {/* Quote */}
-
-      <div className="mt-8 text-center max-w-md">
-
+      <div
+        className="
+        mt-4
+        sm:mt-5
+        lg:mt-6
+        text-center
+        px-1
+        sm:px-2
+        lg:px-3
+        "
+      >
         <p
           className="
-          text-xl
+          text-base
+          sm:text-lg
+          lg:text-xl
           italic
-          text-[#3b2b1d]
+          leading-relaxed
           font-serif
+          text-[#3b2b1d]
           "
         >
           {chapter?.quote || "No quote available."}
@@ -74,28 +98,31 @@ const StoryIllustration = ({ story, chapter }) => {
 
         <div
           className="
-          mt-4
-          w-20
+          w-14
+          sm:w-16
           h-0.5
           bg-amber-700/40
           mx-auto
+          mt-3
+          sm:mt-4
           "
         />
 
         <p
           className="
-          mt-3
-          text-sm
-          tracking-widest
+          mt-2
+          sm:mt-3
+          text-[10px]
+          sm:text-xs
+          tracking-[2px]
+          sm:tracking-[3px]
           uppercase
-          text-[#5a4632]
+          text-[#6a5038]
           "
         >
           {story?.title}
         </p>
-
       </div>
-
     </div>
   );
 };

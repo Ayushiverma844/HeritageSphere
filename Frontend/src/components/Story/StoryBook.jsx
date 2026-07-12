@@ -17,6 +17,7 @@ const StoryBook = ({ story, chapter }) => {
 
   const [currentPage, setCurrentPage] =
     useState(0);
+    
 
   // -----------------------------
   // Split Story into Book Pages
@@ -133,7 +134,7 @@ const StoryBook = ({ story, chapter }) => {
         border
         border-heritage-gold/20
         shadow-[0_20px_60px_rgba(0,0,0,0.45)]
-        h-205
+        min-h-205
         bg-[#f3e6c9]
         "
       >
@@ -149,8 +150,8 @@ const StoryBook = ({ story, chapter }) => {
           from-[#f7ecd2]
           to-[#ead8b5]
           text-[#2b1c0d]
-          px-8
-          py-8
+          px-10
+          py-10
           border-r
           border-black/10
           "
@@ -187,8 +188,10 @@ const StoryBook = ({ story, chapter }) => {
             <div
               className="
               story-content
-              text-[15px]
-              leading-6
+              text-[16px]
+leading-6
+font-serif
+tracking-[0.2px]
               whitespace-pre-line
               text-justify
               "
@@ -229,7 +232,7 @@ const StoryBook = ({ story, chapter }) => {
               disabled:cursor-not-allowed
               "
             >
-              ← Previous
+              ◀
             </button>
 
             <p className="text-sm font-medium tracking-wide">
@@ -244,8 +247,7 @@ const StoryBook = ({ story, chapter }) => {
                 currentPage === pages.length - 1
               }
               className="
-              px-5
-              py-2
+              p-2
               rounded-xl
               border
               border-black/15
@@ -255,7 +257,7 @@ const StoryBook = ({ story, chapter }) => {
               disabled:cursor-not-allowed
               "
             >
-              Next →
+              ▶
             </button>
 
           </div>
@@ -270,7 +272,7 @@ const StoryBook = ({ story, chapter }) => {
             w-10
             h-full
             bg-linear-to-l
-            from-black/10
+            from-black/20
             to-transparent
             pointer-events-none
             "
@@ -293,9 +295,9 @@ const StoryBook = ({ story, chapter }) => {
           z-20
           pointer-events-none
           bg-linear-to-r
-          from-black/10
-          via-black/25
-          to-black/10
+          from-black/15
+          via-black/30
+          to-black/15
           "
         />
 
