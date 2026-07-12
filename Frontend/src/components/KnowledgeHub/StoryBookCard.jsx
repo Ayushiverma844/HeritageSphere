@@ -157,7 +157,7 @@ const StoryBookCard = ({
 
             {/* Image */}
 
-            <div className="flex justify-center pt-5">
+            <div className="flex justify-center pt-6">
               <div
                 className="
                   w-76
@@ -212,7 +212,7 @@ const StoryBookCard = ({
 
             {/* Title */}
 
-            <div className="px-3 mt-6 min-h-17.5 flex items-center justify-center">
+            <div className="px-3 mt-5 min-h-17.5 flex items-center justify-center">
               <h2
                 className="
                   text-center
@@ -237,7 +237,7 @@ const StoryBookCard = ({
 
             {/* Summary */}
 
-            <div className="px-4 mt-5">
+            <div className="px-4 mt-4">
               <p
                 className="
                   text-center
