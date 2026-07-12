@@ -651,10 +651,10 @@ How To Reach
                         <img
                           src={item.image_url }
                           alt={item.name}
-                          className="h-40 w-full object-cover"
+                          className="h-42 w-full object-cover"
                         />
 
-                        <div className="p-4">
+                        <div className="p-3">
 
                           <h3 className="font-semibold">
                             {item.name}

@@ -1759,7 +1759,7 @@ chapters.forEach((chapter) => {
 
                     {/* Cover */}
 
-                    <div className="h-56 overflow-hidden">
+                    <div className="h-65 overflow-hidden">
 
                       <img
 
@@ -1775,9 +1775,9 @@ chapters.forEach((chapter) => {
 
                     {/* Body */}
 
-                    <div className="p-5">
+                    <div className="p-4">
 
-                      <h3 className="text-xl font-semibold">
+                      <h3 className="text-xl font-semibold leading-tight">
 
                         {story.title}
 

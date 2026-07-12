@@ -1697,7 +1697,7 @@ useEffect(() => {
 
               {/* Image */}
 
-              <div className="h-56 overflow-hidden">
+              <div className="h-65 overflow-hidden">
 
                 <img
                   src={place.image_url}
@@ -1711,11 +1711,11 @@ useEffect(() => {
 
               <div className="p-5">
 
-                <h3 className="text-xl font-semibold">
+               <h3 className="text-xl font-bold leading-tight">
                   {place.name}
                 </h3>
 
-                <p className="text-gray-400 mt-2">
+                <p className="text-gray-400 mt-3">
                   {place.city}, {place.state}
                 </p>
 
@@ -1723,7 +1723,7 @@ useEffect(() => {
                   {place.category_name}
                 </p>
 
-                <div className="flex gap-3 mt-6">
+                <div className="flex gap-3 mt-4">
 
                   <button
                     onClick={() =>

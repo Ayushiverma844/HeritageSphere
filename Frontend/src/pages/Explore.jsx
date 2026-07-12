@@ -669,7 +669,7 @@ places.map((place,index)=>(
     </div>
 
     {/* Bottom Content */}
-    <div className="absolute bottom-5 left-5 right-5">
+    <div className="absolute bottom-3 left-5 right-5">
 
       {/* Category + Price */}
       <div className="flex items-center justify-between mb-2">
