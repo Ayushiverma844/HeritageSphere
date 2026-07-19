@@ -13,7 +13,7 @@ import Admin from "./pages/AdminDashboard";
 import AdminManagePlaces from "./components/Admin/ManagePlaces";
 import AdminManageStories from "./components/Admin/ManageStories";
 import AdminManageCategories from "./components/Admin/ManageCategories";
-import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
+import AiStoryGenerator from "./components/Admin/AIStoryGenerator";
 import ManageUsers from "./components/Admin/ManageUser"
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./routes/adminRoute";
