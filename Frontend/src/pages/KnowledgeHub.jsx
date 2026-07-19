@@ -8,10 +8,10 @@ import {
 
 import storyService from "../services/storyService";
 import categoryService from "../services/categoryService";
-import StoryBookCard from "../components/knowledgeHub/StoryBookCard";
-import KnowledgeFilters from "../components/knowledgeHub/KnowledgeFilters";
-import StorySkeleton from "../components/knowledgeHub/StorySkeleton";
-import Pagination from "../components/knowledgeHub/Pagination";
+import StoryBookCard from "../components/KnowledgeHub/StoryBookCard";
+import KnowledgeFilters from "../components/KnowledgeHub/KnowledgeFilters";
+import StorySkeleton from "../components/KnowledgeHub/StorySkeleton";
+import Pagination from "../components/KnowledgeHub/Pagination";
 import collectionService from "../services/collectionService";
 import Footer from "../components/Footer";
 
