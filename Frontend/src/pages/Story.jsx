@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, BookOpen ,  Bookmark, } from "lucide-react";
 
-import StorySidebar from "../components/story/StorySidebar";
-import StoryBook from "../components/story/StoryBook";
-import ChapterNavigation from "../components/story/ChapterNavigation";
+import StorySidebar from "../components/Story/StorySidebar";
+import StoryBook from "../components/Story/StoryBook";
+import ChapterNavigation from "../components/Story/ChapterNavigation";
 
 import storyService from "../services/storyService";
 import collectionService from "../services/collectionService";
