@@ -16,7 +16,7 @@ import AdminManageCategories from "./components/Admin/ManageCategories";
 import AiStoryGenerator from "./components/Admin/AiStoryGenerator";
 import ManageUsers from "./components/Admin/ManageUser"
 import NotFound from "./pages/NotFound";
-import AdminRoute from "./routes/AdminRoute";
+import AdminRoute from "./routes/adminRoute";
 
 const App = () => {
   return (
