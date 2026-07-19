@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Star, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/api"; 
 import collectionService from "../../services/collectionService";
 
 const HeritageHighlights = () => {
@@ -15,24 +15,22 @@ const HeritageHighlights = () => {
   // FETCH PLACES
   // =========================
   useEffect(() => {
-    const fetchPlaces = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/places?page=1&limit=4"
-        );
+  const fetchPlaces = async () => {
+    try {
+      const res = await api.get("/places?page=1&limit=4");
 
-        if (res.data.success) {
-          setPlaces(res.data.places);
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
+      if (res.data.success) {
+        setPlaces(res.data.places);
       }
-    };
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchPlaces();
-  }, []);
+  fetchPlaces();
+}, []);
 
   // =========================
   // FETCH SAVED ITEMS
