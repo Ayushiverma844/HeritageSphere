@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-
 import {
-  Landmark ,
+  Landmark,
   User,
   House,
   Compass,
@@ -13,37 +12,36 @@ import {
   Bookmark,
 } from "lucide-react";
 
-
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
-const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
 
-useEffect(() => {
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error("Failed to parse stored user:", err);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
 
-  const storedUser = localStorage.getItem("user");
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
 
-  if (storedUser) {
-    setUser(JSON.parse(storedUser));
-  }
+    setUser(null);
+    setIsOpen(false);
 
-}, []);
-const handleLogout = () => {
+    navigate("/");
+  };
 
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
-
-  setUser(null);
-   setIsOpen(false);
-  
-
-  navigate("/");
-
-};
   return (
     <nav className="fixed top-0 left-0 z-50 w-full bg-heritage-dark/40 backdrop-blur-xl border-b border-heritage-gold/10">
       <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
@@ -57,9 +55,9 @@ const handleLogout = () => {
           />
 
           <h1 className="text-lg md:text-xl font-bold text-white whitespace-nowrap">
-  Heritage
-  <span className="text-heritage-gold">Sphere</span>
-</h1>
+            Heritage
+            <span className="text-heritage-gold">Sphere</span>
+          </h1>
         </Link>
 
         {/* Desktop Navigation */}
@@ -98,115 +96,67 @@ const handleLogout = () => {
         </div>
 
         {/* Right Section */}
-       <div
-  className="relative flex items-center gap-2 md:gap-5"
->
-          
- 
-
-
+        <div className="relative flex items-center gap-2 md:gap-5">
 
           {/* Desktop Profile */}
-      {user && (
-
-<Link to="/profile">
-
-<button
-className="hidden md:flex h-13 w-13 rounded-full bg-white/5 border border-white/10
-items-center justify-center text-white
-hover:text-heritage-gold hover:scale-120 transition-all duration-300"
->
-
-{user.profile_image ? (
-
-<img
-src={user.profile_image}
-alt="profile"
-className="h-13 w-13 rounded-full object-cover"
+          {user && (
+            <Link to="/profile">
+              <button
+                className="hidden md:flex h-12 w-12 rounded-full bg-white/5 border border-white/10
+                items-center justify-center text-white
+                hover:text-heritage-gold hover:scale-110 transition-all duration-300"
+              ><User
+  size={22}
+  className="text-heritage-gold"
 />
+              </button>
+            </Link>
+          )}
 
-) : (
-
-<User size={20}/>
-
-)}
-
-</button>
-
-</Link>
-
-)}
           {/* Desktop Login */}
-         {!user && (
+          {!user && (
+            <Link to="/auth">
+              <button
+                className="hidden md:block px-6 py-2 rounded-xl bg-heritage-gold text-black font-semibold
+                hover:bg-heritage-light-gold hover:scale-110
+                hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]
+                transition-all duration-300"
+              >
+                Login
+              </button>
+            </Link>
+          )}
 
-<Link to="/auth">
+          {/* admin dashboard */}
+          {(user?.role === "admin" || user?.role === "super_admin") && (
+            <Link
+              to="/admin"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl
+              bg-heritage-gold/10 border border-heritage-gold/20 text-heritage-gold
+              hover:bg-heritage-gold hover:text-black transition-all duration-300"
+            >
+              <Landmark size={16} />
+              Dashboard
+            </Link>
+          )}
 
-<button
-className="hidden md:block px-6 py-2 rounded-xl bg-heritage-gold text-black font-semibold
-hover:bg-heritage-light-gold hover:scale-110
-hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]
-transition-all duration-300"
->
-
-Login
-
-</button>
-
-</Link>
-
-)}
-
-{/* admin dashboard */}
-{(user?.role === "admin"  || user?.role === "super_admin") && (
-
-<Link
-to="/admin"
-className="
-hidden md:flex
-items-center
-gap-2
-px-4
-py-2
-rounded-xl
-bg-heritage-gold/10
-border
-border-heritage-gold/20
-text-heritage-gold
-hover:bg-heritage-gold
-hover:text-black
-transition-all
-duration-300
-"
->
-<Landmark size={16}/>
-Dashboard
-</Link>
-
-)}
-
-{/* logout */}
-{user && (
-
-<button
-
-onClick={handleLogout}
-
-className="hidden md:block px-6 py-2 rounded-xl border border-red-500
-text-red-400 hover:bg-red-500 hover:text-white
-transition-all duration-300"
-
->
-
-Logout
-
-</button>
-
-)}
+          {/* logout */}
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="hidden md:block px-6 py-2 rounded-xl border border-red-500
+              text-red-400 hover:bg-red-500 hover:text-white
+              transition-all duration-300"
+            >
+              Logout
+            </button>
+          )}
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden text-white p-1"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
           >
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
@@ -270,81 +220,51 @@ Logout
           <hr className="border-heritage-gold/20" />
 
           {/* Mobile Actions */}
-         
-           
-         {user && (
+          {user && (
+            <Link
+              to="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
+            >
+              <User size={20} />
+              Profile
+            </Link>
+          )}
 
-<Link
-to="/profile"
-onClick={() => setIsOpen(false)}
-className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
->
-
-<User size={20}/>
-
-Profile
-
-</Link>
-
-)}
           {!user && (
+            <Link to="/auth" onClick={() => setIsOpen(false)}>
+              <button
+                className="mt-2 px-4 py-2 rounded-xl bg-heritage-gold text-black font-semibold hover:bg-heritage-light-gold transition-all duration-300"
+              >
+                Login
+              </button>
+            </Link>
+          )}
 
-<Link to="/auth" onClick={() => setIsOpen(false)}>
+          {/* admin dashboard */}
+          {(user?.role === "admin" || user?.role === "super_admin") && (
+            <Link
+              to="/admin"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
+            >
+              Dashboard
+            </Link>
+          )}
 
-<button
-className="mt-2 px-4 py-2 rounded-xl bg-heritage-gold text-black font-semibold hover:bg-heritage-light-gold transition-all duration-300"
->
-
-Login
-
-</button>
-
-</Link>
-
-)}
-
-{/* admin dashboard */}
-{(user?.role === "admin"  || user?.role === "super_admin") && (
-
-<Link
-
-to="/admin"
-
-onClick={() => setIsOpen(false)}
-
-className="flex items-center gap-3 text-gray-300 hover:text-heritage-gold"
-
->
-
-Dashboard
-
-</Link>
-
-)}
-
-{user && (
-
-<button
-
-onClick={() => {
-
-handleLogout();
-
-setIsOpen(false);
-
-}}
-
-className="mt-2 px-4 py-2 rounded-xl border border-red-500
-text-red-400 hover:bg-red-500 hover:text-white
-transition-all duration-300"
-
->
-
-Logout
-
-</button>
-
-)}
+          {user && (
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsOpen(false);
+              }}
+              className="mt-2 px-4 py-2 rounded-xl border border-red-500
+              text-red-400 hover:bg-red-500 hover:text-white
+              transition-all duration-300"
+            >
+              Logout
+            </button>
+          )}
 
         </div>
       </div>

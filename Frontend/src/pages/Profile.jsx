@@ -283,8 +283,12 @@ localStorage.setItem(
         <img
 
           src={user.profile_image || img}
-
+          
           alt={user.name}
+           onError={(e) => {
+    e.target.onerror = null; // infinite loop prevent
+    e.target.src = img;
+  }}
 
           className="
           w-60
@@ -746,6 +750,10 @@ previewImage
 ||
 (user.profile_image || img)
 }
+ onError={(e) => {
+    e.target.onerror = null; // infinite loop prevent
+    e.target.src = img;
+  }}
           alt="Profile"
           className="
           w-32
