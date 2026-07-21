@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import bgImage from "../src/assests/bg.jpg"
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -33,9 +34,8 @@ const App = () => {
     bg-center
     "
     style={{
-      backgroundImage:
-        "url('/bg/heritage-bg.jpg')",
-    }}
+  backgroundImage: `url(${bgImage})`,
+}}
   />
 
   {/* Dark Overlay */}
@@ -60,7 +60,7 @@ const App = () => {
  
 <Routes>
   <Route path="/" element={<Home />} />
-  <Route path="/*" element={<NotFound/>} /> 
+  <Route path="*" element={<NotFound/>} /> 
 
   <Route path="/auth" element={<Auth />} />
 
