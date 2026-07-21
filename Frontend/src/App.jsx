@@ -18,10 +18,11 @@ import AiStoryGenerator from "./components/Admin/AIStoryGenerator";
 import ManageUsers from "./components/Admin/ManageUser"
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./routes/adminRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 const App = () => {
   return (
-   
+
     <div className="relative min-h-screen">
 
   {/* Background Image */}
@@ -57,10 +58,9 @@ const App = () => {
 
   </div>
 
- 
+
 <Routes>
   <Route path="/" element={<Home />} />
-  <Route path="*" element={<NotFound/>} /> 
 
   <Route path="/auth" element={<Auth />} />
 
@@ -72,9 +72,23 @@ const App = () => {
 
   <Route path="/stories/:slug" element={<Story />} />
 
-  <Route path="/my-collection" element={<Collection />} />
+  <Route
+    path="/my-collection"
+    element={
+      <ProtectedRoute>
+        <Collection />
+      </ProtectedRoute>
+    }
+  />
 
-  <Route path="/profile" element={<Profile />} />
+  <Route
+    path="/profile"
+    element={
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
+    }
+  />
 
   <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
   <Route path="/admin/manage-places" element={<AdminRoute><AdminManagePlaces /></AdminRoute>} />
@@ -82,6 +96,9 @@ const App = () => {
   <Route path="/admin/manage-categories" element={<AdminRoute><AdminManageCategories /></AdminRoute>} />
   <Route path="/admin/ai-story-generator" element={<AdminRoute><AiStoryGenerator /></AdminRoute>} />
   <Route path="/admin/manage-users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
+
+  {/* Catch-all must stay LAST */}
+  <Route path="*" element={<NotFound/>} />
 </Routes>
 </div>
   )

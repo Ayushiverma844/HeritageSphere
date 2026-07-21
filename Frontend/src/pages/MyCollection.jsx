@@ -14,6 +14,7 @@ const MyCollection = () => {
 
   const [collection, setCollection] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
@@ -23,6 +24,7 @@ const MyCollection = () => {
   const fetchCollection = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const data = await collectionService.getMyCollection();
 
@@ -42,16 +44,15 @@ const MyCollection = () => {
 
       setCollection(merged);
     } catch (err) {
-      console.log(err);
+      // interceptor already handles 401 (refresh/redirect),
+      // this just covers any other failure without spamming console
+      setError("Could not load your collection. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRemove = async (item) => {
-
-
-
     try {
       await collectionService.removeItem(
         item.item_type,
@@ -66,7 +67,6 @@ const MyCollection = () => {
         )
       );
     } catch (err) {
-      console.log(err);
       alert("Failed to remove item.");
     }
   };
@@ -80,6 +80,20 @@ const MyCollection = () => {
     return (
       <div className="min-h-screen flex items-center justify-center text-white text-xl">
         Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-white">
+        <p className="text-red-400 text-lg mb-6">{error}</p>
+        <button
+          onClick={fetchCollection}
+          className="px-6 py-3 rounded-xl bg-heritage-gold text-black font-semibold hover:scale-105 transition"
+        >
+          Retry
+        </button>
       </div>
     );
   }
